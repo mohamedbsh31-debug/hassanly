@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
   const { error } = await supabase
     .from('bookings')
-    .update({ status: 'confirmed' })
+    .update({ status: 'confirmed' } as any)
     .eq('id', bookingId)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

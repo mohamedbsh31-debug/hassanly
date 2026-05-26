@@ -1,7 +1,6 @@
-export const dynamic = 'force-dynamic'
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
+import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { registerAction } from '@/lib/auth-actions'

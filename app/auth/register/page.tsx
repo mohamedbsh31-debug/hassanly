@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { registerAction } from '@/lib/auth-actions'
@@ -15,7 +15,7 @@ const WILAYAS = [
   'Tipaza','Mila','Aïn Defla','Naâma','Aïn Témouchent','Ghardaïa','Relizane',
 ]
 
-export default function RegisterPage() {
+function RegisterForm() {
   const searchParams = useSearchParams()
   const defaultRole = searchParams.get('role') === 'barber_owner' ? 'barber_owner' : 'client'
 
@@ -121,3 +121,10 @@ export default function RegisterPage() {
   )
 }
 
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <RegisterForm />
+    </Suspense>
+  )
+}

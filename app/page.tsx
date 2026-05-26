@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { createServerSupabaseClient } from '@/lib/supabase'
 import { getCurrentUser } from '@/lib/auth-actions'
 import HomeClient from './HomeClient'
@@ -26,3 +27,4 @@ export default async function HomePage() {
 
   return <HomeClient shops={shops} user={currentUser} />
 }
+

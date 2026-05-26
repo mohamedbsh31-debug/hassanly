@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 'use client'
 
 import { useState, useTransition, useEffect } from 'react'
@@ -120,3 +121,4 @@ export default function RegisterPage() {
     </div>
   )
 }
+

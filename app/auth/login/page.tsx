@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 'use client'
 
 import { useState, useTransition } from 'react'
@@ -67,3 +68,4 @@ export default function LoginPage() {
     </div>
   )
 }
+

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 
 type Props = { searchParams: Promise<{ plan?: string }> }
@@ -67,3 +68,4 @@ export default async function PaymentSuccessPage({ searchParams }: Props) {
     </div>
   )
 }
+

@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { redirect } from 'next/navigation'
 import { createServerSupabaseClient } from '@/lib/supabase'
 import OnboardingClient from './OnboardingClient'
@@ -26,3 +27,4 @@ export default async function OnboardingPage() {
 
   return <OnboardingClient profile={profile} />
 }
+

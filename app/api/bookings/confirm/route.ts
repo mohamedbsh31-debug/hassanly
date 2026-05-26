@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
     .single()
 
   if (!booking) return NextResponse.json({ error: 'Réservation introuvable' }, { status: 404 })
-  if ((booking.shops as any).owner_id !== user.id) {
+  if ((booking as any).shops?.owner_id !== user.id) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
   }
 

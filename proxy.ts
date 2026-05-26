@@ -8,7 +8,7 @@ const BARBER_ONLY_ROUTES = ['/dashboard']
 // Routes to redirect away from if already logged in
 const AUTH_ROUTES = ['/auth/login', '/auth/register']
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(

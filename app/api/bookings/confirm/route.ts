@@ -22,13 +22,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Non autorisé' }, { status: 403 })
   }
 
- // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-ignore
 const { error } = await supabase
   .from('bookings')
+  // @ts-ignore
   .update({ status: 'confirmed' })
   .eq('id', bookingId)
-
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
   return NextResponse.json({ success: true })

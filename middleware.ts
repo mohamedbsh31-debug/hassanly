@@ -1,14 +1,11 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
-// Routes that require authentication
 const PROTECTED_ROUTES = ['/dashboard', '/profile', '/bookings']
-// Routes only for barber owners
 const BARBER_ONLY_ROUTES = ['/dashboard']
-// Routes to redirect away from if already logged in
 const AUTH_ROUTES = ['/auth/login', '/auth/register']
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
   const supabase = createServerClient(
@@ -32,24 +29,19 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  // Refresh session — IMPORTANT: do not remove
   const { data: { user } } = await supabase.auth.getUser()
-
   const path = request.nextUrl.pathname
 
-  // Redirect logged-in users away from auth pages
   if (user && AUTH_ROUTES.some((r) => path.startsWith(r))) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
-  // Redirect unauthenticated users away from protected routes
   if (!user && PROTECTED_ROUTES.some((r) => path.startsWith(r))) {
     const loginUrl = new URL('/auth/login', request.url)
     loginUrl.searchParams.set('redirect', path)
     return NextResponse.redirect(loginUrl)
   }
 
-  // For barber-only routes, verify role
   if (user && BARBER_ONLY_ROUTES.some((r) => path.startsWith(r))) {
     const { data: profile } = await supabase
       .from('profiles')

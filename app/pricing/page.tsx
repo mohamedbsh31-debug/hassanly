@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const plans = [
   {
@@ -82,6 +83,14 @@ const faqs = [
 
 export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const router = useRouter();
+
+  function handleSelectPlan(planId: string) {
+    // If user is already a barber owner, send them straight to the dashboard billing tab.
+    // Otherwise, send to register as barber owner with plan pre-selected in the URL.
+    // We optimistically redirect to register; middleware will redirect logged-in users to dashboard.
+    router.push(`/auth/register?role=barber_owner&plan=${planId}`);
+  }
 
   return (
     <main
@@ -261,7 +270,7 @@ export default function PricingPage() {
           }}
         >
           {plans.map((plan, i) => (
-            <PlanCard key={plan.id} plan={plan} featured={i === 1} />
+            <PlanCard key={plan.id} plan={plan} featured={i === 1} onSelect={handleSelectPlan} />
           ))}
         </section>
 
@@ -520,9 +529,11 @@ export default function PricingPage() {
 function PlanCard({
   plan,
   featured,
+  onSelect,
 }: {
   plan: (typeof plans)[0];
   featured: boolean;
+  onSelect: (planId: string) => void;
 }) {
   const [hovered, setHovered] = useState(false);
 
@@ -678,6 +689,7 @@ function PlanCard({
 
       {/* CTA */}
       <button
+        onClick={() => onSelect(plan.id)}
         style={{
           width: "100%",
           padding: "14px",

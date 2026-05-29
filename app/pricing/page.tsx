@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase";
 
 const plans = [
   {
@@ -85,10 +86,17 @@ export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const router = useRouter();
 
-  function handleSelectPlan(planId: string) {
-    // Route to dashboard billing tab — middleware will catch unauthenticated
-    // users and redirect them to login first, then back here after login.
-    router.push(`/dashboard?tab=billing&plan=${planId}`);
+  async function handleSelectPlan(planId: string) {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (user) {
+      // Already logged in → go straight to dashboard billing tab
+      router.push(`/dashboard?tab=billing&plan=${planId}`)
+    } else {
+      // Not logged in → register as barber owner
+      router.push(`/auth/register?role=barber_owner&plan=${planId}`)
+    }
   }
 
   return (

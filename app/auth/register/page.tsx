@@ -18,6 +18,7 @@ const WILAYAS = [
 function RegisterForm() {
   const searchParams = useSearchParams()
   const defaultRole = searchParams.get('role') === 'barber_owner' ? 'barber_owner' : 'client'
+  const plan = searchParams.get('plan') ?? ''
 
   const [role, setRole] = useState<'client' | 'barber_owner'>(defaultRole)
   const [error, setError] = useState<string | null>(null)
@@ -68,6 +69,9 @@ function RegisterForm() {
 
         <form onSubmit={handleSubmit} className="auth-form">
           {error && <div className="auth-error">{error}</div>}
+
+          {/* Pass the chosen plan through registration */}
+          <input type="hidden" name="plan" value={plan} />
 
           <div className="form-row">
             <div className="form-group">

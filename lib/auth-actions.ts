@@ -15,6 +15,7 @@ export async function registerAction(formData: FormData) {
   const phone = formData.get('phone') as string
   const role = formData.get('role') as UserRole
   const wilaya = formData.get('wilaya') as string
+  const plan = formData.get('plan') as string | null
 
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -37,7 +38,9 @@ export async function registerAction(formData: FormData) {
   // For barber owners, redirect to onboarding; for clients, to home
   if (data.user) {
     if (role === 'barber_owner') {
-      redirect('/dashboard/onboarding')
+      // Carry the chosen plan through onboarding so billing tab opens after setup
+      const onboardingUrl = plan ? `/dashboard/onboarding?plan=${plan}` : '/dashboard/onboarding'
+      redirect(onboardingUrl)
     }
     redirect('/?welcome=1')
   }

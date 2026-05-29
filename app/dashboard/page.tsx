@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 import { redirect } from 'next/navigation'
+import { Suspense } from 'react'
 import { createServerSupabaseClient } from '@/lib/supabase'
 import DashboardClient from './DashboardClient'
 
@@ -55,13 +56,15 @@ export default async function DashboardPage() {
   ])
 
   return (
-    <DashboardClient
-      profile={profile}
-      shop={shop}
-      bookings={bookingsRes.data ?? []}
-      services={servicesRes.data ?? []}
-      barbers={barbersRes.data ?? []}
-    />
+    <Suspense fallback={<div>Chargement…</div>}>
+      <DashboardClient
+        profile={profile}
+        shop={shop}
+        bookings={bookingsRes.data ?? []}
+        services={servicesRes.data ?? []}
+        barbers={barbersRes.data ?? []}
+      />
+    </Suspense>
   )
 }
 

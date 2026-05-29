@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { logoutAction } from '@/lib/auth-actions'
 import ServicesManager from './services/ServicesManager'
 import StaffManager from './staff/StaffManager'
@@ -51,7 +52,12 @@ function isToday(iso: string) {
 }
 
 export default function DashboardClient({ profile, shop, bookings, services, barbers }: Props) {
-  const [activeTab, setActiveTab]   = useState<Tab>('overview')
+  const searchParams = useSearchParams()
+  const tabParam = searchParams.get('tab') as Tab | null
+  const validTabs: Tab[] = ['overview', 'appointments', 'clients', 'services', 'staff', 'billing']
+  const initialTab: Tab = tabParam && validTabs.includes(tabParam) ? tabParam : 'overview'
+
+  const [activeTab, setActiveTab]   = useState<Tab>(initialTab)
   const [sidebarOpen, setSidebar]   = useState(false)
   const [localBookings, setBookings] = useState<Booking[]>(bookings)
   const [toast, setToast]           = useState<string | null>(null)

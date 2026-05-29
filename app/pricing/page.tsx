@@ -86,10 +86,9 @@ export default function PricingPage() {
   const router = useRouter();
 
   function handleSelectPlan(planId: string) {
-    // If user is already a barber owner, send them straight to the dashboard billing tab.
-    // Otherwise, send to register as barber owner with plan pre-selected in the URL.
-    // We optimistically redirect to register; middleware will redirect logged-in users to dashboard.
-    router.push(`/auth/register?role=barber_owner&plan=${planId}`);
+    // Route to dashboard billing tab — middleware will catch unauthenticated
+    // users and redirect them to login first, then back here after login.
+    router.push(`/dashboard?tab=billing&plan=${planId}`);
   }
 
   return (

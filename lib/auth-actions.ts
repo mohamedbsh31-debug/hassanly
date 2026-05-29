@@ -51,6 +51,7 @@ export async function loginAction(formData: FormData) {
 
   const email = formData.get('email') as string
   const password = formData.get('password') as string
+  const redirectTo = formData.get('redirect') as string | null
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
@@ -73,6 +74,11 @@ export async function loginAction(formData: FormData) {
       .single()
 
     revalidatePath('/', 'layout')
+
+    // Honour the redirect param (set by middleware when accessing protected routes)
+    if (redirectTo && redirectTo.startsWith('/')) {
+      redirect(redirectTo)
+    }
 
     if (profile?.role === 'barber_owner') {
       redirect('/dashboard')

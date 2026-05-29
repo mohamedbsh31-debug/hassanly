@@ -1,12 +1,15 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, Suspense } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { loginAction } from '@/lib/auth-actions'
 
-export default function LoginPage() {
+function LoginForm() {
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const searchParams = useSearchParams()
+  const redirectTo = searchParams.get('redirect') ?? ''
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -31,6 +34,9 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit} className="auth-form">
           {error && <div className="auth-error">{error}</div>}
+
+          {/* Pass the redirect destination through the form */}
+          <input type="hidden" name="redirect" value={redirectTo} />
 
           <div className="form-group">
             <label>Email</label>
@@ -65,6 +71,14 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   )
 }
 

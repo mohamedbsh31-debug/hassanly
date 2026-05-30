@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { logoutAction } from '@/lib/auth-actions'
@@ -58,7 +58,8 @@ function isToday(iso: string) {
 // ─── Main component ───────────────────────────────────────────────────────────
 export default function DashboardClient({ profile, shop, bookings, services, barbers, shopHours, barberHours }: Props) {
   const searchParams = useSearchParams()
-  const tabParam  = searchParams.get('tab') as Tab | null
+  const tabParam      = searchParams.get('tab') as Tab | null
+  const checkoutParam = searchParams.get('checkout') === '1'
   const validTabs: Tab[] = ['overview', 'appointments', 'clients', 'services', 'staff', 'hours', 'analytics', 'billing']
   const initialTab: Tab  = tabParam && validTabs.includes(tabParam) ? tabParam : 'overview'
 
@@ -381,7 +382,7 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
           )}
 
           {/* ── BILLING ────────────────────────────────────────────── */}
-          {activeTab === 'billing' && <BillingTab shop={shop} />}
+          {activeTab === 'billing' && <BillingTab shop={shop} autoCheckout={checkoutParam} />}
 
         </main>
       </div>
@@ -475,9 +476,22 @@ function EmptyState({ icon, message }: { icon: string; message: string }) {
 }
 
 // ─── Billing tab ─────────────────────────────────────────────────────────────
-function BillingTab({ shop }: { shop: Shop }) {
+function BillingTab({ shop, autoCheckout }: { shop: Shop; autoCheckout?: boolean }) {
   const [selectedPlan, setSelectedPlan] = useState(shop.plan)
   const [isPending, startTransition]    = useTransition()
+  const hasFired = useRef(false)
+
+  useEffect(() => {
+    if (autoCheckout && !hasFired.current) {
+      hasFired.current = true
+      startTransition(async () => {
+        const { createChargilyCheckoutAction } = await import('@/lib/chargily-actions')
+        const fd = new FormData()
+        fd.set('plan', selectedPlan)
+        await createChargilyCheckoutAction(fd)
+      })
+    }
+  }, [autoCheckout])
 
   const PLANS = [
     { id: 'starter', name: 'Starter', price: 3000,  features: ["1 coiffeur", "Jusqu'à 5 services", "Réservation en ligne", "Notifications SMS"] },

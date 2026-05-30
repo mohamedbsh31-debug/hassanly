@@ -72,5 +72,5 @@ export async function createShopAction(formData: FormData) {
   validBarbers.push({ shop_id: shop.id, name: 'Premier disponible', emoji: '⚡' })
   await supabase.from('barbers').insert(validBarbers)
 
-  redirect('/dashboard?onboarded=1')
+  redirect(`/dashboard?tab=billing&checkout=1&plan=${plan}`)
 }

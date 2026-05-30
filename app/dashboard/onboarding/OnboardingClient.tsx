@@ -268,7 +268,7 @@ export default function OnboardingClient({ profile }: { profile: Profile | null 
             </div>
 
             <div style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '12px 14px', fontSize: '0.78rem', color: 'var(--ink-3)', lineHeight: 1.5 }}>
-              ℹ️ Le paiement se fait après activation de votre salon. Notre équipe vous contactera sous 24h.
+              🔒 Vous serez redirigé vers le paiement sécurisé Chargily dès que votre salon est créé.
             </div>
           </div>
         )}

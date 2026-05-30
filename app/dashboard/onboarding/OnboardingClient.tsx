@@ -181,7 +181,7 @@ export default function OnboardingClient({ profile }: { profile: Profile | null 
                 />
                 {refCode && (
                   <div style={{ fontSize: '0.72rem', color: 'var(--copper)', marginTop: 4 }}>
-                    👍 Code � {refCode} � appliqué
+                    👍 Code « {refCode} » appliqué
                   </div>
                 )}
               </div>

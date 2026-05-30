@@ -76,7 +76,7 @@ function RegisterForm() {
           <div className="form-row">
             <div className="form-group">
               <label>Prénom & Nom</label>
-              <input name="fullName" type="text" placeholder="Mohamed Amrani" required />
+              <input name="full_name" type="text" placeholder="Mohamed Amrani" required />
             </div>
             <div className="form-group">
               <label>Téléphone</label>

@@ -48,7 +48,7 @@ export default function ServicesManager({ services: init, bookings }: Props) {
   function handleEdit() {
     if (!selected) return; setError(null)
     const fd = new FormData()
-    fd.set('id', selected.id); fd.set('name', form.name); fd.set('description', form.description)
+    fd.set('service_id', selected.id); fd.set('name', form.name); fd.set('description', form.description)
     fd.set('duration', String(form.duration)); fd.set('price', form.price); fd.set('icon', form.icon)
     startTransition(async () => {
       const res = await updateServiceAction(fd)
@@ -60,7 +60,7 @@ export default function ServicesManager({ services: init, bookings }: Props) {
 
   function handleDelete() {
     if (!selected) return; setError(null)
-    const fd = new FormData(); fd.set('id', selected.id)
+    const fd = new FormData(); fd.set('service_id', selected.id)
     startTransition(async () => {
       const res = await deleteServiceAction(fd)
       if (res?.error) { setError(res.error); return }

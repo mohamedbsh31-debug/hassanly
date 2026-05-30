@@ -46,6 +46,9 @@ export async function createChargilyCheckoutAction(formData: FormData) {
   const siteUrl   = process.env.NEXT_PUBLIC_SITE_URL!
   const secretKey = process.env.CHARGILY_SECRET_KEY!
 
+  const successUrl = `${siteUrl}/dashboard/billing/success?plan=${plan}&shop_id=${shop.id}`
+  const failureUrl = `${siteUrl}/dashboard/billing/failed`
+
   // Create checkout session on Chargily
   // NOTE: Chargily v2 takes the amount in DZD directly — no conversion needed
   const chargilyRes = await fetch(`${getChargilyBaseUrl()}/checkouts`, {
@@ -57,8 +60,8 @@ export async function createChargilyCheckoutAction(formData: FormData) {
     body: JSON.stringify({
       amount,                                  // DZD directly — NOT centimes
       currency: 'dzd',
-      success_url: `${siteUrl}/dashboard/billing/success?plan=${plan}`,
-      failure_url: `${siteUrl}/dashboard/billing/failed`,
+      success_url: successUrl,
+      failure_url: failureUrl,
       webhook_endpoint: `${siteUrl}/api/chargily/webhook`,  // correct field name
       description: `Hassanly — Formule ${PLAN_LABELS[plan]} · ${shop.name}`,
       locale: 'fr',

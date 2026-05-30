@@ -87,7 +87,27 @@ export async function POST(request: NextRequest) {
       .update({ status: 'paid', paid_at: new Date().toISOString() })
       .eq('chargily_id', chargilyId)
 
-    console.log(`✅ Payment confirmed: shop ${shopId} upgraded to ${plan}`)
+    // Affiliate commission: 1000 DA for first payment of a referred shop
+    const { data: shopData } = await supabase
+      .from('shops').select('referred_by').eq('id', shopId).single()
+
+    if (shopData?.referred_by) {
+      const { error: commErr } = await supabase
+        .from('commissions')
+        .insert({ affiliate_code: shopData.referred_by, shop_id: shopId, amount: 1000 })
+      if (!commErr) {
+        const { data: aff } = await supabase
+          .from('affiliates').select('total_earned').eq('code', shopData.referred_by).single()
+        if (aff) {
+          await supabase.from('affiliates')
+            .update({ total_earned: aff.total_earned + 1000 })
+            .eq('code', shopData.referred_by)
+        }
+        console.log('Commission 1000 DA for affiliate', shopData.referred_by)
+      }
+    }
+
+    console.log(`Payment confirmed: shop ${shopId} upgraded to ${plan}`)
   }
 
   // ── 4. Handle checkout.failed ──────────────────────────────────────────────

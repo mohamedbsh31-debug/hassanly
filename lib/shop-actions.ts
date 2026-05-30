@@ -16,6 +16,7 @@ export async function createShopAction(formData: FormData) {
   const phone       = formData.get('phone') as string
   const description = formData.get('description') as string
   const plan        = formData.get('plan') as 'starter' | 'pro' | 'elite'
+  const referredBy  = (formData.get('referred_by') as string | null)?.trim().toUpperCase() || null
 
   // Create the shop (inactive until manually verified)
   const { data: shop, error: shopError } = await supabase
@@ -30,6 +31,7 @@ export async function createShopAction(formData: FormData) {
       plan,
       is_active:   false,
       is_verified: false,
+      referred_by: referredBy || null,
     })
     .select()
     .single()

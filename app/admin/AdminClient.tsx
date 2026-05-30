@@ -10,6 +10,9 @@ import {
   setShopPlanAction,
   banUserAction,
   deleteUserAction,
+  createAffiliateAction,
+  deleteAffiliateAction,
+  markCommissionPaidAction,
 } from './admin-actions'
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -17,7 +20,9 @@ type Profile = { id: string; full_name: string | null; phone: string | null; rol
 type Shop    = { id: string; owner_id: string; name: string; wilaya: string; plan: string; is_active: boolean; is_verified: boolean; rating: number | null; plan_expires_at: string | null; created_at: string; phone: string | null; description: string | null }
 type Booking = { id: string; shop_id: string; client_id: string; booked_at: string; price: number; status: string }
 type Payment = { id: string; shop_id: string; plan: string; amount: number; status: string; paid_at: string | null; created_at: string }
-type Tab     = 'overview' | 'shops' | 'users' | 'payments' | 'analytics'
+type Tab        = 'overview' | 'shops' | 'users' | 'payments' | 'analytics' | 'affiliates'
+type Affiliate  = { id: string; name: string; phone: string | null; code: string; total_earned: number; paid_out: number; created_at: string }
+type Commission = { id: string; affiliate_code: string; shop_id: string; amount: number; status: string; paid_at: string | null; created_at: string }
 
 type Props = {
   adminProfile: Profile
@@ -25,6 +30,8 @@ type Props = {
   shops: Shop[]
   bookings: Booking[]
   payments: Payment[]
+  affiliates: Affiliate[]
+  commissions: Commission[]
 }
 
 const PLAN_PRICES: Record<string, number> = { starter: 3000, pro: 6500, elite: 12000 }
@@ -46,7 +53,7 @@ function ago(iso: string) {
 }
 
 // ── Root component ──────────────────────────────────────────────────────────
-export default function AdminClient({ adminProfile, profiles, shops, bookings, payments }: Props) {
+export default function AdminClient({ adminProfile, profiles, shops, bookings, payments, affiliates, commissions }: Props) {
   const [tab, setTab]         = useState<Tab>('overview')
   const [toast, setToast]     = useState<{ msg: string; type: 'ok' | 'err' } | null>(null)
   const [sidebarOpen, setSidebar] = useState(false)
@@ -62,6 +69,7 @@ export default function AdminClient({ adminProfile, profiles, shops, bookings, p
     { id: 'users',      label: 'Utilisateurs',     icon: '👥' },
     { id: 'payments',   label: 'Paiements',        icon: '💳' },
     { id: 'analytics',  label: 'Analytiques',      icon: '📈' },
+    { id: 'affiliates', label: 'Affiliés',          icon: '🤝' },
   ]
 
   return (
@@ -113,7 +121,8 @@ export default function AdminClient({ adminProfile, profiles, shops, bookings, p
           {tab === 'shops'     && <ShopsTab     shops={shops} profiles={profiles} onToast={showToast} />}
           {tab === 'users'     && <UsersTab     profiles={profiles} shops={shops} onToast={showToast} />}
           {tab === 'payments'  && <PaymentsTab  payments={payments} shops={shops} onToast={showToast} />}
-          {tab === 'analytics' && <AnalyticsTab shops={shops} profiles={profiles} bookings={bookings} payments={payments} />}
+          {tab === 'analytics'  && <AnalyticsTab  shops={shops} profiles={profiles} bookings={bookings} payments={payments} />}
+          {tab === 'affiliates' && <AffiliatesTab affiliates={affiliates} commissions={commissions} shops={shops} onToast={showToast} />}
         </main>
       </div>
 
@@ -952,3 +961,193 @@ const btnCopper: React.CSSProperties = { background: '#d97706', color: '#fff', b
 const btnGhost: React.CSSProperties = { background: '#fff', color: '#374151', border: '1px solid #e5e7eb', borderRadius: 8, padding: '10px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }
 const labelStyle: React.CSSProperties = { display: 'block', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#6b7280', marginBottom: 4 }
 const selectStyle: React.CSSProperties = { width: '100%', border: '1px solid #e5e7eb', borderRadius: 8, padding: '9px 12px', fontSize: 13, fontFamily: 'inherit', background: '#fff' }
+
+// ── AffiliatesTab ─────────────────────────────────────────────────────────
+function AffiliatesTab({
+  affiliates, commissions, shops, onToast,
+}: {
+  affiliates: Affiliate[]
+  commissions: Commission[]
+  shops: Shop[]
+  onToast: (m: string, t?: 'ok' | 'err') => void
+}) {
+  const [isPending, startTransition] = useTransition()
+  const [showForm, setShowForm]      = useState(false)
+  const [name,  setName]  = useState('')
+  const [phone, setPhone] = useState('')
+  const [code,  setCode]  = useState('')
+  const [err,   setErr]   = useState<string | null>(null)
+
+  const totalEarned  = affiliates.reduce((s, a) => s + a.total_earned, 0)
+  const totalPaid    = affiliates.reduce((s, a) => s + a.paid_out, 0)
+  const pendingComms = commissions.filter(c => c.status === 'pending')
+
+  function shopName(id: string) {
+    return shops.find(s => s.id === id)?.name ?? id.slice(0, 8)
+  }
+
+  function handleCreate() {
+    if (!name.trim() || !code.trim()) { setErr('Nom et code requis.'); return }
+    setErr(null)
+    startTransition(async () => {
+      const fd = new FormData()
+      fd.set('name', name); fd.set('phone', phone); fd.set('code', code.toUpperCase())
+      const res = await createAffiliateAction(fd)
+      if (res?.error) { setErr(res.error) }
+      else { setShowForm(false); setName(''); setPhone(''); setCode(''); onToast('Affilié créé !') }
+    })
+  }
+
+  function handleDelete(code: string) {
+    if (!confirm('Supprimer cet affilié ?')) return
+    startTransition(async () => {
+      const res = await deleteAffiliateAction(code)
+      if (res?.error) onToast(res.error, 'err')
+      else onToast('Affilié supprimé.')
+    })
+  }
+
+  function handleMarkPaid(id: string) {
+    startTransition(async () => {
+      const res = await markCommissionPaidAction(id)
+      if (res?.error) onToast(res.error, 'err')
+      else onToast('Commission marquée payée !')
+    })
+  }
+
+  const inp: React.CSSProperties = { width: '100%', border: '1px solid #e5e7eb', borderRadius: 8, padding: '9px 12px', fontSize: 13, fontFamily: 'inherit', background: '#fff', outline: 'none' }
+
+  return (
+    <div style={{ maxWidth: 900 }}>
+      {/* Stats row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 14, marginBottom: 24 }}>
+        {[
+          { label: 'Affiliés actifs',        value: affiliates.length },
+          { label: 'Commissions en attente', value: `${pendingComms.reduce((s, c) => s + c.amount, 0).toLocaleString()} DA` },
+          { label: 'Total gagné',            value: `${totalEarned.toLocaleString()} DA` },
+          { label: 'Total versé',            value: `${totalPaid.toLocaleString()} DA` },
+        ].map(s => (
+          <div key={s.label} style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '16px 18px' }}>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#6b7280', marginBottom: 6 }}>{s.label}</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: '#111827' }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Add affiliate */}
+      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20, marginBottom: 24 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: showForm ? 16 : 0 }}>
+          <div style={{ fontWeight: 700, fontSize: 15, color: '#111827' }}>Affiliés</div>
+          <button onClick={() => setShowForm(f => !f)} style={btnCopper}>
+            {showForm ? '✕ Annuler' : '+ Nouvel affilié'}
+          </button>
+        </div>
+        {showForm && (
+          <div>
+            {err && <div style={{ background: '#fef2f2', border: '1px solid #fca5a5', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#dc2626', marginBottom: 12 }}>{err}</div>}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 14 }}>
+              <div><label style={labelStyle}>Nom *</label><input style={inp} value={name} onChange={e => setName(e.target.value)} placeholder="Karim Bensalem" /></div>
+              <div><label style={labelStyle}>Téléphone</label><input style={inp} value={phone} onChange={e => setPhone(e.target.value)} placeholder="0550 000 000" /></div>
+              <div>
+                <label style={labelStyle}>Code unique *</label>
+                <input style={inp} value={code} onChange={e => setCode(e.target.value.toUpperCase().replace(/\s+/g, ''))} placeholder="KARIM01" />
+                <div style={{ fontSize: 11, color: '#9ca3af', marginTop: 4 }}>Lien : hassanly.vercel.app/?ref={code || 'CODE'}</div>
+              </div>
+            </div>
+            <button onClick={handleCreate} disabled={isPending} style={{ ...btnCopper, opacity: isPending ? 0.6 : 1 }}>
+              {isPending ? 'Création…' : 'Créer l\'affilié'}
+            </button>
+          </div>
+        )}
+
+        {/* Affiliates table */}
+        <div style={{ marginTop: showForm ? 24 : 0, overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid #f3f4f6' }}>
+                {['Nom', 'Code', 'Téléphone', 'Lien de parrainage', 'Gagné', 'Versé', 'Solde', 'Actions'].map(h => (
+                  <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#6b7280', whiteSpace: 'nowrap' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {affiliates.length === 0 && (
+                <tr><td colSpan={8} style={{ padding: '24px', textAlign: 'center', color: '#9ca3af' }}>Aucun affilié pour l'instant.</td></tr>
+              )}
+              {affiliates.map(a => (
+                <tr key={a.id} style={{ borderBottom: '1px solid #f9fafb' }}>
+                  <td style={{ padding: '10px 12px', fontWeight: 600, color: '#111827' }}>{a.name}</td>
+                  <td style={{ padding: '10px 12px' }}><span style={{ background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a', borderRadius: 999, padding: '2px 10px', fontFamily: 'monospace', fontSize: 12 }}>{a.code}</span></td>
+                  <td style={{ padding: '10px 12px', color: '#6b7280' }}>{a.phone ?? '—'}</td>
+                  <td style={{ padding: '10px 12px' }}>
+                    <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#374151', background: '#f3f4f6', padding: '3px 8px', borderRadius: 6 }}>
+                      hassanly.vercel.app/?ref={a.code}
+                    </span>
+                  </td>
+                  <td style={{ padding: '10px 12px', fontWeight: 600, color: '#059669' }}>{a.total_earned.toLocaleString()} DA</td>
+                  <td style={{ padding: '10px 12px', color: '#6b7280' }}>{a.paid_out.toLocaleString()} DA</td>
+                  <td style={{ padding: '10px 12px', fontWeight: 700, color: (a.total_earned - a.paid_out) > 0 ? '#d97706' : '#9ca3af' }}>
+                    {(a.total_earned - a.paid_out).toLocaleString()} DA
+                  </td>
+                  <td style={{ padding: '10px 12px' }}>
+                    <button onClick={() => handleDelete(a.code)} style={{ background: '#fef2f2', border: '1px solid #fca5a5', color: '#dc2626', borderRadius: 6, padding: '4px 10px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+                      Supprimer
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Commissions */}
+      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20 }}>
+        <div style={{ fontWeight: 700, fontSize: 15, color: '#111827', marginBottom: 16 }}>
+          Commissions
+          {pendingComms.length > 0 && (
+            <span style={{ marginLeft: 8, background: '#d97706', color: '#fff', borderRadius: 999, padding: '2px 8px', fontSize: 11 }}>
+              {pendingComms.length} en attente
+            </span>
+          )}
+        </div>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid #f3f4f6' }}>
+                {['Affilié', 'Salon', 'Montant', 'Statut', 'Date', 'Action'].map(h => (
+                  <th key={h} style={{ padding: '8px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#6b7280' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {commissions.length === 0 && (
+                <tr><td colSpan={6} style={{ padding: '24px', textAlign: 'center', color: '#9ca3af' }}>Aucune commission générée.</td></tr>
+              )}
+              {commissions.map(c => (
+                <tr key={c.id} style={{ borderBottom: '1px solid #f9fafb' }}>
+                  <td style={{ padding: '10px 12px' }}><span style={{ background: '#fffbeb', color: '#92400e', border: '1px solid #fde68a', borderRadius: 999, padding: '2px 10px', fontFamily: 'monospace', fontSize: 12 }}>{c.affiliate_code}</span></td>
+                  <td style={{ padding: '10px 12px', color: '#374151' }}>{shopName(c.shop_id)}</td>
+                  <td style={{ padding: '10px 12px', fontWeight: 600, color: '#059669' }}>{c.amount.toLocaleString()} DA</td>
+                  <td style={{ padding: '10px 12px' }}>
+                    <span style={{ background: c.status === 'paid' ? '#ecfdf5' : '#fffbeb', color: c.status === 'paid' ? '#065f46' : '#92400e', border: `1px solid ${c.status === 'paid' ? '#6ee7b7' : '#fde68a'}`, borderRadius: 999, padding: '2px 10px', fontSize: 12, fontWeight: 600 }}>
+                      {c.status === 'paid' ? '✓ Payé' : '⏳ En attente'}
+                    </span>
+                  </td>
+                  <td style={{ padding: '10px 12px', color: '#6b7280' }}>{formatDate(c.created_at)}</td>
+                  <td style={{ padding: '10px 12px' }}>
+                    {c.status === 'pending' && (
+                      <button onClick={() => handleMarkPaid(c.id)} disabled={isPending} style={{ background: '#ecfdf5', border: '1px solid #6ee7b7', color: '#065f46', borderRadius: 6, padding: '4px 10px', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}>
+                        Marquer payé
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  )
+}

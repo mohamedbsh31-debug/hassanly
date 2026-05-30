@@ -28,7 +28,7 @@ export default async function AdminPage() {
   // ── Fetch all data with service role (bypasses RLS) ────────────────────────
   const service = getServiceClient()
 
-  const [profilesRes, shopsRes, bookingsRes, paymentsRes] = await Promise.all([
+  const [profilesRes, shopsRes, bookingsRes, paymentsRes, affiliatesRes, commissionsRes] = await Promise.all([
     service
       .from('profiles')
       .select('id, full_name, phone, role, wilaya, created_at')
@@ -47,6 +47,14 @@ export default async function AdminPage() {
       .select('id, shop_id, plan, amount, status, paid_at, created_at')
       .order('created_at', { ascending: false })
       .limit(200),
+    service
+      .from('affiliates')
+      .select('*')
+      .order('created_at', { ascending: false }),
+    service
+      .from('commissions')
+      .select('*')
+      .order('created_at', { ascending: false }),
   ])
 
   return (
@@ -56,6 +64,8 @@ export default async function AdminPage() {
       shops={shopsRes.data ?? []}
       bookings={bookingsRes.data ?? []}
       payments={paymentsRes.data ?? []}
+      affiliates={affiliatesRes.data ?? []}
+      commissions={commissionsRes.data ?? []}
     />
   )
 }

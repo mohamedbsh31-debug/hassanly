@@ -114,3 +114,50 @@ export async function deleteUserAction(userId: string) {
   revalidatePath('/admin')
   return { ok: true }
 }
+
+// ── Affiliates ─────────────────────────────────────────────────────────────
+
+export async function createAffiliateAction(fd: FormData) {
+  const service = await requireAdmin()
+  const name  = (fd.get('name')  as string)?.trim()
+  const phone = (fd.get('phone') as string)?.trim()
+  const code  = (fd.get('code')  as string)?.trim().toUpperCase().replace(/\s+/g, '')
+  if (!name || !code) return { error: 'Nom et code requis.' }
+  const { error } = await service.from('affiliates').insert({ name, phone: phone || null, code })
+  if (error) return { error: error.message }
+  revalidatePath('/admin')
+  return { ok: true }
+}
+
+export async function deleteAffiliateAction(code: string) {
+  const service = await requireAdmin()
+  const { error } = await service.from('affiliates').delete().eq('code', code)
+  if (error) return { error: error.message }
+  revalidatePath('/admin')
+  return { ok: true }
+}
+
+export async function markCommissionPaidAction(commissionId: string) {
+  const service = await requireAdmin()
+  // Get commission to know affiliate_code and amount
+  const { data: comm } = await service
+    .from('commissions')
+    .select('affiliate_code, amount')
+    .eq('id', commissionId)
+    .single()
+  if (!comm) return { error: 'Commission introuvable.' }
+
+  const { error } = await service
+    .from('commissions')
+    .update({ status: 'paid', paid_at: new Date().toISOString() })
+    .eq('id', commissionId)
+  if (error) return { error: error.message }
+
+  // Increment paid_out on the affiliate
+  await service.rpc('increment_affiliate_paid', {
+    p_code: comm.affiliate_code,
+    p_amount: comm.amount,
+  })
+  revalidatePath('/admin')
+  return { ok: true }
+}

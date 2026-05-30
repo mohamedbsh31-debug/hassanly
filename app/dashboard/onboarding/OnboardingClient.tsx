@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { createShopAction } from '@/lib/shop-actions'
 
 const WILAYAS = [
@@ -38,6 +39,13 @@ export default function OnboardingClient({ profile }: { profile: Profile | null 
   ])
   const [barbers, setBarbers] = useState([{ name: profile?.full_name ?? '', emoji: '👨🏽' }])
   const [plan, setPlan] = useState<'starter' | 'pro' | 'elite'>('pro')
+  const searchParams = useSearchParams()
+  const refCode = searchParams.get('ref') ?? (typeof window !== 'undefined' ? localStorage.getItem('hassanly_ref') : null) ?? ''
+
+  useEffect(() => {
+    const ref = searchParams.get('ref')
+    if (ref) localStorage.setItem('hassanly_ref', ref)
+  }, [])
 
   const STEP_LABELS = ['Salon', 'Services', 'Équipe', 'Formule']
 
@@ -77,6 +85,7 @@ export default function OnboardingClient({ profile }: { profile: Profile | null 
     fd.set('name', shopName); fd.set('wilaya', wilaya); fd.set('address', address)
     fd.set('phone', phone); fd.set('description', description); fd.set('plan', plan)
     fd.set('services', JSON.stringify(validServices)); fd.set('barbers', JSON.stringify(validBarbers))
+    if (refCode) fd.set('referred_by', refCode)
 
     startTransition(async () => {
       const result = await createShopAction(fd)

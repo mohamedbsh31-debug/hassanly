@@ -109,9 +109,9 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
         style={{
           width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10,
           padding: '10px 20px', border: 'none', cursor: locked ? 'not-allowed' : 'pointer', fontSize: 14, fontFamily: 'inherit',
-          borderLeft: `3px solid ${active ? '#d97706' : 'transparent'}`,
-          background: active ? '#fff7ed' : 'transparent',
-          color: active ? '#d97706' : locked ? '#c4c9d4' : '#6b7280',
+          borderLeft: `3px solid ${active ? '#C4793A' : 'transparent'}`,
+          background: active ? 'rgba(196,121,58,0.15)' : 'transparent',
+          color: active ? '#C9922A' : locked ? '#5A4E3A' : '#9A9E8A',
           fontWeight: active ? 600 : 400,
           transition: 'all 0.15s',
           opacity: locked ? 0.6 : 1,
@@ -130,7 +130,7 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f9fafb', fontFamily: 'Inter, sans-serif' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: '#F5EFE0', fontFamily: "'DM Sans', sans-serif" }}>
 
       {/* ── SIDEBAR ──────────────────────────────────────────────────── */}
       {sidebarOpen && (
@@ -139,21 +139,22 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
       <aside style={{
         width: 240, background: '#fff', borderRight: '1px solid #e5e7eb', flexShrink: 0,
         display: 'flex', flexDirection: 'column', position: 'sticky', top: 0, height: '100vh', overflowY: 'auto', zIndex: 100,
+      background: '#2A2418', borderRight: '1px solid #3D3020',
       }}>
         {/* Logo */}
-        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #e5e7eb' }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', color: '#111827', textDecoration: 'none' }}>
+        <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #3D3020' }}>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', color: '#F5EFE0', textDecoration: 'none', fontFamily: "'Playfair Display', Georgia, serif" }}>
             <svg width="22" height="16" viewBox="0 0 28 22" fill="none">
-              <path d="M2 14c4-8 8-8 12 0s8 8 12 0" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+              <path d="M2 14c4-8 8-8 12 0s8 8 12 0" stroke="#F5EFE0" strokeWidth="2.5" strokeLinecap="round" />
             </svg>
-            hass<span style={{ color: '#d97706' }}>anly</span>
+            hass<span style={{ color: '#C4793A' }}>anly</span>
           </Link>
         </div>
 
         {/* Shop info */}
-        <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb' }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#111827', marginBottom: 2 }}>{shop.name}</div>
-          <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 8 }}>{shop.wilaya}</div>
+        <div style={{ padding: '16px 20px', borderBottom: '1px solid #3D3020' }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: '#F5EFE0', marginBottom: 2 }}>{shop.name}</div>
+          <div style={{ fontSize: 12, color: '#9A9E8A', marginBottom: 8 }}>{shop.wilaya}</div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             <span style={{
               display: 'inline-block', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999,
@@ -177,12 +178,12 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
         </nav>
 
         {/* Bottom */}
-        <div style={{ padding: '16px 20px', borderTop: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <Link href="/" style={{ fontSize: 13, color: '#6b7280', display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ padding: '16px 20px', borderTop: '1px solid #3D3020', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <Link href="/" style={{ fontSize: 13, color: '#9A9E8A', display: 'flex', alignItems: 'center', gap: 6 }}>
             👁 Vue client
           </Link>
           <form action={logoutAction}>
-            <button style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: 13, cursor: 'pointer', padding: 0, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button style={{ background: 'none', border: 'none', color: '#9A9E8A', fontSize: 13, cursor: 'pointer', padding: 0, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}>
               🚪 Déconnexion
             </button>
           </form>
@@ -193,7 +194,7 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
         {/* Top bar */}
-        <header style={{ background: '#fff', borderBottom: '1px solid #e5e7eb', padding: '0 24px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+        <header style={{ background: '#FEFCF7', borderBottom: '1px solid #D9CEAF', padding: '0 24px', height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
           <h1 style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>
             {TABS.find(t => t.id === activeTab)?.label}
           </h1>
@@ -355,16 +356,16 @@ const td: React.CSSProperties = { padding: '12px 16px', verticalAlign: 'middle' 
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: '20px' }}>
-      <div style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#6b7280', marginBottom: 8 }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 700, color: '#111827', letterSpacing: '-0.02em' }}>{value}</div>
+    <div style={{ background: '#FEFCF7', border: '1px solid #D9CEAF', borderRadius: 12, padding: '20px' }}>
+      <div style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#9A9E8A', marginBottom: 8 }}>{label}</div>
+      <div style={{ fontSize: 28, fontWeight: 700, color: '#2A2418', letterSpacing: '-0.02em', fontFamily: "'Playfair Display', Georgia, serif" }}>{value}</div>
     </div>
   )
 }
 
 function TableWrap({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, overflow: 'hidden' }}>
+    <div style={{ background: '#FEFCF7', border: '1px solid #D9CEAF', borderRadius: 12, overflow: 'hidden' }}>
       <div style={{ overflowX: 'auto' }}>{children}</div>
     </div>
   )
@@ -373,9 +374,9 @@ function TableWrap({ children }: { children: React.ReactNode }) {
 function THead({ cols }: { cols: string[] }) {
   return (
     <thead>
-      <tr style={{ background: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+      <tr style={{ background: '#F5EFE0', borderBottom: '1px solid #D9CEAF' }}>
         {cols.map(c => (
-          <th key={c} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#9ca3af', whiteSpace: 'nowrap' }}>{c}</th>
+          <th key={c} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#9A9E8A', whiteSpace: 'nowrap' }}>{c}</th>
         ))}
       </tr>
     </thead>

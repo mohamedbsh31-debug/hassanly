@@ -7,6 +7,13 @@ import { createClient } from '@supabase/supabase-js'
 const PLAN_PRICES: Record<string, number> = { starter: 3000, pro: 6500, elite: 12000 }
 const PLAN_LABELS: Record<string, string>  = { starter: 'Starter', pro: 'Pro', elite: 'Elite' }
 
+// Chargily v2 base URL — set CHARGILY_MODE=live in production, defaults to test
+function getChargilyBaseUrl() {
+  return process.env.CHARGILY_MODE === 'live'
+    ? 'https://pay.chargily.net/api/v2'
+    : 'https://pay.chargily.net/test/api/v2'
+}
+
 // Server-side Supabase client with service role (bypasses RLS for payment writes)
 function getServiceClient() {
   return createClient(
@@ -35,24 +42,24 @@ export async function createChargilyCheckoutAction(formData: FormData) {
 
   if (!shop) return { error: 'Salon introuvable.' }
 
-  const amount      = PLAN_PRICES[plan]
-  const siteUrl     = process.env.NEXT_PUBLIC_SITE_URL!
-  const chargilyUrl = process.env.CHARGILY_API_URL!
-  const secretKey   = process.env.CHARGILY_SECRET_KEY!
+  const amount    = PLAN_PRICES[plan]
+  const siteUrl   = process.env.NEXT_PUBLIC_SITE_URL!
+  const secretKey = process.env.CHARGILY_SECRET_KEY!
 
   // Create checkout session on Chargily
-  const chargilyRes = await fetch(`${chargilyUrl}/checkouts`, {
+  // NOTE: Chargily v2 takes the amount in DZD directly — no conversion needed
+  const chargilyRes = await fetch(`${getChargilyBaseUrl()}/checkouts`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${secretKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      amount: amount * 100,                    // convert DA → centimes (Chargily v2 requires centimes)
+      amount,                                  // DZD directly — NOT centimes
       currency: 'dzd',
       success_url: `${siteUrl}/dashboard/billing/success?plan=${plan}`,
       failure_url: `${siteUrl}/dashboard/billing/failed`,
-      webhook_url: `${siteUrl}/api/chargily/webhook`,
+      webhook_endpoint: `${siteUrl}/api/chargily/webhook`,  // correct field name
       description: `Hassanly — Formule ${PLAN_LABELS[plan]} · ${shop.name}`,
       locale: 'fr',
       metadata: {

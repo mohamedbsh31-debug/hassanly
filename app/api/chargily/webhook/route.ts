@@ -18,8 +18,8 @@ function getServiceClient() {
 }
 
 export async function POST(request: NextRequest) {
-  const rawBody  = await request.text()
-  const signature = request.headers.get('x-chargily-signature') // fixed: was 'signature'
+  const rawBody   = await request.text()
+  const signature = request.headers.get('signature') // Chargily v2 uses lowercase 'signature'
 
   // ── 1. Verify HMAC signature ───────────────────────────────────────────────
   if (!signature) {

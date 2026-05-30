@@ -94,7 +94,7 @@ export default function StaffManager({ barbers: init, bookings }: Props) {
 
   function handleEdit() {
     if (!selected) return; setError(null)
-    const fd = new FormData(); fd.set('id', selected.id); fd.set('name', form.name); fd.set('emoji', form.emoji); fd.set('bio', form.bio)
+    const fd = new FormData(); fd.set('barber_id', selected.id); fd.set('name', form.name); fd.set('emoji', form.emoji); fd.set('bio', form.bio)
     startTransition(async () => {
       const res = await updateBarberAction(fd)
       if (res?.error) { setError(res.error); return }
@@ -105,7 +105,7 @@ export default function StaffManager({ barbers: init, bookings }: Props) {
 
   function handleDelete() {
     if (!selected) return; setError(null)
-    const fd = new FormData(); fd.set('id', selected.id)
+    const fd = new FormData(); fd.set('barber_id', selected.id)
     startTransition(async () => {
       const res = await deleteBarberAction(fd)
       if (res?.error) { setError(res.error); return }

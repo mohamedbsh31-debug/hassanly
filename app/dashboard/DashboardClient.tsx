@@ -6,14 +6,17 @@ import { useSearchParams } from 'next/navigation'
 import { logoutAction } from '@/lib/auth-actions'
 import ServicesManager from './services/ServicesManager'
 import StaffManager from './staff/StaffManager'
+import WorkingHoursManager from './hours/WorkingHoursManager'
+
+import type { WeekSchedule } from '@/lib/working-hours-actions'
 
 type Profile  = { full_name: string | null; role: string; wilaya: string | null }
 type Shop     = { id: string; name: string; wilaya: string; plan: string; is_active: boolean; is_verified: boolean; rating: number | null; plan_expires_at: string | null }
 type Booking  = { id: string; booked_at: string; duration: number; price: number; status: string; notes: string | null; profiles: any; services: any; barbers: any }
 type Service  = { id: string; name: string; duration: number; price: number; icon: string }
 type Barber   = { id: string; name: string; emoji: string; rating: number | null; review_count: number }
-type Props    = { profile: Profile; shop: Shop; bookings: Booking[]; services: Service[]; barbers: Barber[] }
-type Tab      = 'overview' | 'appointments' | 'clients' | 'services' | 'staff' | 'billing'
+type Props    = { profile: Profile; shop: Shop; bookings: Booking[]; services: Service[]; barbers: Barber[]; shopHours: WeekSchedule | null; barberHours: Record<string, WeekSchedule | null> }
+type Tab      = 'overview' | 'appointments' | 'clients' | 'services' | 'staff' | 'hours' | 'billing'
 
 const TABS: { id: Tab; icon: string; label: string }[] = [
   { id: 'overview',     icon: '📊', label: "Vue d'ensemble" },
@@ -21,6 +24,7 @@ const TABS: { id: Tab; icon: string; label: string }[] = [
   { id: 'clients',      icon: '👥', label: 'Clients' },
   { id: 'services',     icon: '✂️',  label: 'Services & Tarifs' },
   { id: 'staff',        icon: '👨‍💼', label: 'Mon équipe' },
+  { id: 'hours',        icon: '🕐', label: 'Horaires' },
   { id: 'billing',      icon: '💳', label: 'Abonnement' },
 ]
 
@@ -49,10 +53,10 @@ function isToday(iso: string) {
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
-export default function DashboardClient({ profile, shop, bookings, services, barbers }: Props) {
+export default function DashboardClient({ profile, shop, bookings, services, barbers, shopHours, barberHours }: Props) {
   const searchParams = useSearchParams()
   const tabParam  = searchParams.get('tab') as Tab | null
-  const validTabs: Tab[] = ['overview', 'appointments', 'clients', 'services', 'staff', 'billing']
+  const validTabs: Tab[] = ['overview', 'appointments', 'clients', 'services', 'staff', 'hours', 'billing']
   const initialTab: Tab  = tabParam && validTabs.includes(tabParam) ? tabParam : 'overview'
 
   const [activeTab,    setActiveTab]    = useState<Tab>(initialTab)
@@ -267,6 +271,17 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
 
           {/* ── STAFF ──────────────────────────────────────────────── */}
           {activeTab === 'staff' && <StaffManager barbers={barbers} bookings={localBookings} />}
+
+          {/* ── HOURS ──────────────────────────────────────────────── */}
+          {activeTab === 'hours' && (
+            <WorkingHoursManager
+              shopId={shop.id}
+              shopName={shop.name}
+              shopHours={shopHours}
+              barbers={barbers}
+              barberHours={barberHours}
+            />
+          )}
 
           {/* ── BILLING ────────────────────────────────────────────── */}
           {activeTab === 'billing' && <BillingTab shop={shop} />}

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { Suspense } from 'react'
 import { createServerSupabaseClient } from '@/lib/supabase'
 import DashboardClient from './DashboardClient'
+import { getShopWorkingHoursAction, getBarberWorkingHoursAction } from '@/lib/working-hours-actions'
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabaseClient()
@@ -55,6 +56,18 @@ export default async function DashboardPage() {
       .eq('shop_id', shop.id),
   ])
 
+  const barbers = barbersRes.data ?? []
+
+  // Fetch working hours for shop + all barbers in parallel
+  const [shopHours, ...barberHoursArr] = await Promise.all([
+    getShopWorkingHoursAction(shop.id),
+    ...barbers.map(b => getBarberWorkingHoursAction(b.id)),
+  ])
+
+  // Build barberHours map: barberId → WeekSchedule | null
+  const barberHours: Record<string, any> = {}
+  barbers.forEach((b, i) => { barberHours[b.id] = barberHoursArr[i] })
+
   return (
     <Suspense fallback={<div>Chargement…</div>}>
       <DashboardClient
@@ -62,7 +75,9 @@ export default async function DashboardPage() {
         shop={shop}
         bookings={bookingsRes.data ?? []}
         services={servicesRes.data ?? []}
-        barbers={barbersRes.data ?? []}
+        barbers={barbers}
+        shopHours={shopHours}
+        barberHours={barberHours}
       />
     </Suspense>
   )

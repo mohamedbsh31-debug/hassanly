@@ -9,7 +9,6 @@ export async function createShopAction(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  // Step 1 data
   const name        = formData.get('name') as string
   const wilaya      = formData.get('wilaya') as string
   const address     = formData.get('address') as string
@@ -18,7 +17,7 @@ export async function createShopAction(formData: FormData) {
   const plan        = formData.get('plan') as 'starter' | 'pro' | 'elite'
   const referredBy  = (formData.get('referred_by') as string | null)?.trim().toUpperCase() || null
 
-  // Create the shop (inactive until manually verified)
+  // Create the shop (inactive until payment)
   const { data: shop, error: shopError } = await supabase
     .from('shops')
     .insert({
@@ -38,39 +37,40 @@ export async function createShopAction(formData: FormData) {
 
   if (shopError) return { error: shopError.message }
 
-  // Step 2: services (multiple rows)
-  const serviceNames     = formData.getAll('service_name') as string[]
-  const serviceDurations = formData.getAll('service_duration') as string[]
-  const servicePrices    = formData.getAll('service_price') as string[]
-  const serviceIcons     = formData.getAll('service_icon') as string[]
+  // ── Services — sent as JSON by OnboardingClient ────────────────────────────
+  // OnboardingClient does: fd.set('services', JSON.stringify([{name, duration, price, icon}]))
+  try {
+    const raw = JSON.parse((formData.get('services') as string) ?? '[]')
+    const validServices = (raw as { name: string; duration: string; price: string; icon: string }[])
+      .filter(s => s.name?.trim() !== '' && parseInt(s.price) > 0)
+      .map(s => ({
+        shop_id:  shop.id,
+        name:     s.name.trim(),
+        duration: parseInt(s.duration) || 30,
+        price:    parseInt(s.price),
+        icon:     s.icon || '✂️',
+      }))
+    if (validServices.length > 0) {
+      await supabase.from('services').insert(validServices)
+    }
+  } catch { /* invalid JSON — skip */ }
 
-  const validServices = serviceNames
-    .map((name, i) => ({
-      shop_id:  shop.id,
-      name,
-      duration: parseInt(serviceDurations[i]) || 30,
-      price:    parseInt(servicePrices[i]) || 0,
-      icon:     serviceIcons[i] || '✂️',
-    }))
-    .filter(s => s.name.trim() !== '' && s.price > 0)
+  // ── Barbers — sent as JSON by OnboardingClient ────────────────────────────
+  // OnboardingClient does: fd.set('barbers', JSON.stringify([{name, emoji}]))
+  const validBarbers: { shop_id: string; name: string; emoji: string }[] = []
+  try {
+    const raw = JSON.parse((formData.get('barbers') as string) ?? '[]')
+    const parsed = (raw as { name: string; emoji: string }[])
+      .filter(b => b.name?.trim() !== '')
+      .map(b => ({
+        shop_id: shop.id,
+        name:    b.name.trim(),
+        emoji:   b.emoji || '👨🏽',
+      }))
+    validBarbers.push(...parsed)
+  } catch { /* invalid JSON — skip */ }
 
-  if (validServices.length > 0) {
-    await supabase.from('services').insert(validServices)
-  }
-
-  // Step 3: barbers/staff (multiple rows)
-  const barberNames  = formData.getAll('barber_name') as string[]
-  const barberEmojis = formData.getAll('barber_emoji') as string[]
-
-  const validBarbers = barberNames
-    .map((name, i) => ({
-      shop_id: shop.id,
-      name,
-      emoji:   barberEmojis[i] || '👨🏽',
-    }))
-    .filter(b => b.name.trim() !== '')
-
-  // Always add "Premier disponible" as a barber option
+  // Always add "Premier disponible" as a catch-all option
   validBarbers.push({ shop_id: shop.id, name: 'Premier disponible', emoji: '⚡' })
   await supabase.from('barbers').insert(validBarbers)
 

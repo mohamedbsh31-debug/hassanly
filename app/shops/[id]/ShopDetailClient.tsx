@@ -189,20 +189,45 @@ export default function ShopDetailClient({ shop, services, barbers, bookings, us
           {/* Barbers */}
           <section>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.65rem', color: 'var(--copper)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 12 }}>— Coiffeurs</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))', gap: '1px', background: 'var(--border)', borderRadius: 'var(--r-lg)', overflow: 'hidden' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
               {displayBarbers.map(b => {
                 const sel = selectedBarber?.id === b.id
                 return (
-                  <div key={b.id} onClick={() => setBarber(sel ? null : b)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px 10px', background: sel ? 'var(--copper-dim)' : 'var(--bg-1)', cursor: 'pointer', transition: 'background 0.15s', borderTop: `2px solid ${sel ? 'var(--copper)' : 'transparent'}` }}>
+                  <div key={b.id} onClick={() => setBarber(sel ? null : b)} style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    padding: '20px 12px 16px',
+                    background: sel ? 'var(--copper-dim)' : 'var(--bg-1)',
+                    border: `2px solid ${sel ? 'var(--copper)' : 'var(--border)'}`,
+                    borderRadius: 'var(--r-lg)',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    boxShadow: sel ? '0 0 0 4px rgba(196,121,58,0.15)' : 'none',
+                  }}>
                     {b.photo_url
-                      ? <img src={b.photo_url} alt={b.name} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', marginBottom: 8, border: sel ? '2px solid var(--copper)' : '2px solid var(--border)' }} />
-                      : <div style={{ fontSize: '1.8rem', marginBottom: 8 }}>{b.emoji}</div>
+                      ? <img src={b.photo_url} alt={b.name} style={{
+                          width: 88, height: 88, borderRadius: '50%', objectFit: 'cover',
+                          marginBottom: 12,
+                          border: sel ? '3px solid var(--copper)' : '2px solid var(--border)',
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+                        }} />
+                      : <div style={{
+                          width: 88, height: 88, borderRadius: '50%',
+                          background: 'var(--bg-3)',
+                          border: sel ? '3px solid var(--copper)' : '2px solid var(--border)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '2.6rem', marginBottom: 12,
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+                        }}>
+                          {b.emoji}
+                        </div>
                     }
-                    <div style={{ fontWeight: sel ? 600 : 500, fontSize: '0.8rem', color: 'var(--ink)', textAlign: 'center', marginBottom: 3 }}>{b.name}</div>
+                    <div style={{ fontWeight: sel ? 700 : 500, fontSize: '0.88rem', color: 'var(--ink)', textAlign: 'center', marginBottom: 4 }}>{b.name}</div>
+                    {b.bio && <div style={{ fontSize: '0.7rem', color: 'var(--ink-3)', textAlign: 'center', marginBottom: 4, lineHeight: 1.4 }}>{b.bio}</div>}
                     {b.rating
-                      ? <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--ink-3)' }}>★ {b.rating} ({b.review_count})</div>
-                      : <div style={{ fontSize: '0.68rem', color: 'var(--copper)' }}>Slot rapide</div>
+                      ? <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.72rem', color: sel ? 'var(--copper)' : 'var(--ink-3)' }}>★ {b.rating} <span style={{ opacity: 0.6 }}>({b.review_count})</span></div>
+                      : <div style={{ fontSize: '0.7rem', color: 'var(--copper)', fontWeight: 500 }}>Slot rapide</div>
                     }
+                    {sel && <div style={{ marginTop: 8, fontSize: '0.7rem', fontWeight: 600, color: 'var(--copper)', background: 'rgba(196,121,58,0.15)', borderRadius: 999, padding: '2px 10px' }}>✓ Sélectionné</div>}
                   </div>
                 )
               })}

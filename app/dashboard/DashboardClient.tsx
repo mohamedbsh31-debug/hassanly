@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { logoutAction } from '@/lib/auth-actions'
+import { uploadShopPhotoAction } from '@/lib/upload-actions'
 import ServicesManager from './services/ServicesManager'
 import StaffManager from './staff/StaffManager'
 import WorkingHoursManager from './hours/WorkingHoursManager'
@@ -12,7 +13,7 @@ import { getPlanLimits } from '@/lib/plan-limits'
 import type { WeekSchedule } from '@/lib/working-hours-actions'
 
 type Profile  = { full_name: string | null; role: string; wilaya: string | null }
-type Shop     = { id: string; name: string; wilaya: string; plan: string; is_active: boolean; is_verified: boolean; rating: number | null; plan_expires_at: string | null }
+type Shop     = { id: string; name: string; wilaya: string; plan: string; is_active: boolean; is_verified: boolean; rating: number | null; plan_expires_at: string | null; image_url: string | null }
 type Booking  = { id: string; booked_at: string; duration: number; price: number; status: string; notes: string | null; profiles: any; services: any; barbers: any }
 type Service  = { id: string; name: string; duration: number; price: number; icon: string }
 type Barber   = { id: string; name: string; emoji: string; rating: number | null; review_count: number }
@@ -66,6 +67,8 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
   const [localBookings, setBookings]    = useState<Booking[]>(bookings)
   const [toast,        setToast]        = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState('all')
+  const [shopImageUrl, setShopImageUrl] = useState<string | null>(shop.image_url)
+  const [imgUploading, setImgUploading] = useState(false)
 
   const firstName    = profile.full_name?.split(' ')[0] ?? 'vous'
   const pendingCount = localBookings.filter(b => b.status === 'pending').length
@@ -86,6 +89,18 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
       setBookings(b => b.map(bk => bk.id === id ? { ...bk, status: 'confirmed' } : bk))
       showToast('Rendez-vous confirmé !')
     }
+  }
+
+  async function handleShopImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setImgUploading(true)
+    const fd = new FormData()
+    fd.set('file', file)
+    const res = await uploadShopPhotoAction(fd)
+    setImgUploading(false)
+    if (res?.error) { showToast(`Erreur : ${res.error}`) }
+    else if (res?.success && res.url) { setShopImageUrl(res.url); showToast('Photo mise à jour !') }
   }
 
   const todayBookings = localBookings.filter(b => isToday(b.booked_at))
@@ -221,6 +236,36 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
                 <StatCard label="Recettes du mois"  value={monthRevenue > 0 ? `${monthRevenue.toLocaleString()} DA` : '—'} />
                 <StatCard label="Note moyenne"       value={shop.rating ? `${shop.rating} ★` : '—'} />
               </div>
+
+              {/* Shop cover photo */}
+              <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20, marginBottom: 24 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#111827', marginBottom: 4 }}>Photo de couverture</div>
+                <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 14 }}>Cette photo apparaît sur votre page salon et dans la liste des salons.</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                  <div style={{ width: 120, height: 80, borderRadius: 8, overflow: 'hidden', background: '#f3f4f6', border: '1px solid #e5e7eb', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {shopImageUrl
+                      ? <img src={shopImageUrl} alt="cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : <span style={{ fontSize: '2rem' }}>✂️</span>
+                    }
+                  </div>
+                  <label style={{ cursor: imgUploading ? 'not-allowed' : 'pointer' }}>
+                    <div style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 8,
+                      padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 500,
+                      background: imgUploading ? '#f3f4f6' : '#fff7ed',
+                      border: `1.5px solid ${imgUploading ? '#e5e7eb' : '#d97706'}`,
+                      color: imgUploading ? '#9ca3af' : '#d97706',
+                      transition: 'all 0.15s',
+                      pointerEvents: imgUploading ? 'none' : 'auto' as React.CSSProperties['pointerEvents'],
+                    }}>
+                      {imgUploading ? '⏳ Envoi en cours…' : '📷 Changer la photo'}
+                    </div>
+                    <input type="file" accept="image/*" style={{ display: 'none' }} disabled={imgUploading} onChange={handleShopImageUpload} />
+                  </label>
+                  {shopImageUrl && <span style={{ fontSize: 12, color: '#10b981' }}>✓ Photo enregistrée</span>}
+                </div>
+              </div>
+
               <BookingsTable bookings={localBookings.slice(0, 8)} onConfirm={confirmBooking} />
             </div>
           )}

@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useState, useTransition } from 'react'
 import { createShopAction } from '@/lib/shop-actions'
 
 const WILAYAS = [
@@ -39,13 +38,7 @@ export default function OnboardingClient({ profile }: { profile: Profile | null 
   ])
   const [barbers, setBarbers] = useState([{ name: profile?.full_name ?? '', emoji: '👨🏽' }])
   const [plan, setPlan] = useState<'starter' | 'pro' | 'elite'>('pro')
-  const searchParams = useSearchParams()
-  const refCode = searchParams.get('ref') ?? (typeof window !== 'undefined' ? localStorage.getItem('hassanly_ref') : null) ?? ''
-
-  useEffect(() => {
-    const ref = searchParams.get('ref')
-    if (ref) localStorage.setItem('hassanly_ref', ref)
-  }, [])
+  const [refCode, setRefCode] = useState('')
 
   const STEP_LABELS = ['Salon', 'Services', 'Équipe', 'Formule']
 
@@ -173,6 +166,24 @@ export default function OnboardingClient({ profile }: { profile: Profile | null 
               <div className="form-group">
                 <label>Description courte</label>
                 <textarea style={{ ...inputStyle, resize: 'vertical' }} value={description} onChange={e => setDescription(e.target.value)} placeholder="Décrivez votre salon en 1-2 phrases…" rows={2} />
+              </div>
+              <div className="form-group">
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  Code de parrainage
+                  <span style={{ fontSize: '0.7rem', color: 'var(--ink-3)', fontWeight: 400 }}>(optionnel)</span>
+                </label>
+                <input
+                  style={inputStyle}
+                  value={refCode}
+                  onChange={e => setRefCode(e.target.value.toUpperCase().replace(/\s+/g, ''))}
+                  placeholder="ex : KARIM01"
+                  maxLength={20}
+                />
+                {refCode && (
+                  <div style={{ fontSize: '0.72rem', color: 'var(--copper)', marginTop: 4 }}>
+                    👍 Code � {refCode} � appliqué
+                  </div>
+                )}
               </div>
             </div>
           </div>

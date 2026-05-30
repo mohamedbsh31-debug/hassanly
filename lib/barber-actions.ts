@@ -34,6 +34,7 @@ export async function addBarberAction(formData: FormData) {
       .from('barbers')
       .select('id', { count: 'exact', head: true })
       .eq('shop_id', shopId)
+      .neq('name', 'Premier disponible') // system barber, doesn't count
     if ((count ?? 0) >= limits.maxBarbers) {
       const nextPlan = shop.plan === 'starter' ? 'Pro' : 'Elite'
       return { error: `Votre formule ${shop.plan} est limitée à ${limits.maxBarbers} coiffeur(s). Passez à ${nextPlan} pour en ajouter plus.` }

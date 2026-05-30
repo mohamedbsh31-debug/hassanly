@@ -300,7 +300,7 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
             <div>
               {planLimits.maxBarbers !== -1 && (
                 <PlanUsageBanner
-                  used={barbers.length}
+                  used={barbers.filter(b => b.name !== 'Premier disponible').length}
                   max={planLimits.maxBarbers}
                   label="coiffeur(s)"
                   plan={shop.plan}

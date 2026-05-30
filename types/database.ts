@@ -43,6 +43,7 @@ export type Database = {
           is_active: boolean
           is_verified: boolean
           rating: number | null
+          image_url: string | null
           plan: 'starter' | 'pro' | 'elite'
           plan_expires_at: string | null
           created_at: string

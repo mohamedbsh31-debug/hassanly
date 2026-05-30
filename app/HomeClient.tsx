@@ -24,7 +24,7 @@ const CATEGORIES = [
 
 const ALL_WILAYAS = ['Toutes', 'Alger', 'Oran', 'Constantine', 'Annaba', 'Tlemcen', 'Sétif', 'Blida', 'Béjaïa', 'Batna']
 
-type ShopDisplay = { id: string; name: string; emoji?: string; rating: number | null; reviews?: number; wilaya: string; quartier?: string; description: string | null; tags?: string[]; min_price?: number; badge?: string; plan: string; image?: string }
+type ShopDisplay = { id: string; name: string; emoji?: string; rating: number | null; reviews?: number; wilaya: string; quartier?: string; description: string | null; tags?: string[]; min_price?: number; badge?: string; plan: string; image?: string; image_url?: string | null }
 type Props = { shops: Shop[]; user: { user: any; profile: Profile | null } | null }
 
 function Logo({ light = false }: { light?: boolean }) {
@@ -131,7 +131,7 @@ export default function HomeClient({ shops, user }: Props) {
   const [menuOpen, setMenuOpen] = useState(false)
 
   const displayShops: ShopDisplay[] = shops.length > 0
-    ? shops.map(s => ({ id: s.id, name: s.name, rating: s.rating, wilaya: s.wilaya, description: s.description, plan: s.plan }))
+    ? shops.map(s => ({ id: s.id, name: s.name, rating: s.rating, wilaya: s.wilaya, description: s.description, plan: s.plan, image_url: s.image_url ?? null }))
     : DEMO_SHOPS
 
   const recommended = displayShops.slice(0, 4)

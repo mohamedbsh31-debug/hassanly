@@ -494,9 +494,9 @@ function BillingTab({ shop, autoCheckout }: { shop: Shop; autoCheckout?: boolean
   }, [autoCheckout])
 
   const PLANS = [
-    { id: 'starter', name: 'Starter', price: 3000,  features: ["1 coiffeur", "Jusqu'à 5 services", "Réservation en ligne", "Notifications SMS"] },
-    { id: 'pro',     name: 'Pro',     price: 6500,  features: ["Jusqu'à 5 coiffeurs", "Services illimités", "Analytics & rapports", "Badge Vérifié", "WhatsApp"], popular: true },
-    { id: 'elite',   name: 'Elite',   price: 12000, features: ["Coiffeurs illimités", "Multi-adresses", "Support 24/7", "Mise en avant", "Programme fidélité"] },
+    { id: 'starter', name: 'Starter', price: 3000,  features: ["1 coiffeur", "Jusqu'à 5 services", "Réservation en ligne", "Page salon publique"] },
+    { id: 'pro',     name: 'Pro',     price: 6500,  features: ["Jusqu'à 5 coiffeurs", "Services illimités", "Analytics & rapports", "Badge Salon Vérifié"], popular: true },
+    { id: 'elite',   name: 'Elite',   price: 12000, features: ["Coiffeurs illimités", "Services illimités", "Analytics & rapports", "Badge Salon Vérifié", "Mise en avant dans les résultats"] },
   ]
 
   function handleUpgrade() {

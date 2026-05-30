@@ -17,7 +17,7 @@ const plans = [
       "1 profil coiffeur",
       "Réservation en ligne",
       "Jusqu'à 5 services",
-      "Notifications SMS",
+      "Page salon publique",
     ],
     cta: "Commencer",
   },
@@ -33,7 +33,6 @@ const plans = [
       "Services illimités",
       "Analytics & rapports",
       "Badge Salon Vérifié",
-      "Notifications SMS + WhatsApp",
     ],
     cta: "Choisir Pro",
   },
@@ -46,10 +45,10 @@ const plans = [
     featured: false,
     features: [
       "Coiffeurs illimités",
-      "Multi-adresses",
-      "Support prioritaire 24/7",
-      "Mise en avant",
-      "Programme fidélité",
+      "Services illimités",
+      "Analytics & rapports",
+      "Badge Salon Vérifié",
+      "Mise en avant dans les résultats",
     ],
     cta: "Choisir Elite",
   },
@@ -61,36 +60,32 @@ const faqs = [
     a: "Oui, vous pouvez upgrader ou downgrader votre abonnement à tout moment depuis votre tableau de bord. Le changement prend effet immédiatement.",
   },
   {
-    q: "Y a-t-il une période d'essai gratuite ?",
-    a: "Nous offrons 14 jours d'essai gratuit sur tous nos plans. Aucune carte bancaire requise pour commencer.",
-  },
-  {
     q: "Comment fonctionne la facturation ?",
-    a: "La facturation est mensuelle, en dinars algériens (DA). Vous recevez une facture par email chaque mois.",
+    a: "La facturation est mensuelle, en dinars algériens (DA). Le paiement s'effectue via Chargily Pay, la solution de paiement sécurisée algérienne.",
   },
   {
     q: "Le Badge Salon Vérifié, c'est quoi ?",
     a: "C'est un badge affiché sur votre profil public qui indique aux clients que votre salon a été vérifié par Hassanly — renforçant la confiance et la crédibilité.",
   },
+  {
+    q: "Qu'est-ce que la mise en avant ?",
+    a: "Les salons Elite apparaissent en priorité dans les résultats de recherche et sur la page d'accueil, augmentant ainsi leur visibilité auprès des clients.",
+  },
 ];
 
 const tableRows = [
-  { feature: "Profils coiffeurs",        starter: "1",     pro: "5",         elite: "Illimités" },
-  { feature: "Services",                 starter: "5 max", pro: "Illimités", elite: "Illimités" },
-  { feature: "Réservation en ligne",     starter: true,    pro: true,        elite: true },
-  { feature: "Notifications SMS",        starter: true,    pro: true,        elite: true },
-  { feature: "Notifications WhatsApp",   starter: false,   pro: true,        elite: true },
-  { feature: "Analytics & rapports",     starter: false,   pro: true,        elite: true },
-  { feature: "Badge Salon Vérifié",      starter: false,   pro: true,        elite: true },
-  { feature: "Multi-adresses",           starter: false,   pro: false,       elite: true },
-  { feature: "Mise en avant",            starter: false,   pro: false,       elite: true },
-  { feature: "Programme fidélité",       starter: false,   pro: false,       elite: true },
-  { feature: "Support prioritaire 24/7", starter: false,   pro: false,       elite: true },
+  { feature: "Profils coiffeurs",          starter: "1",     pro: "5",         elite: "Illimités" },
+  { feature: "Services",                   starter: "5 max", pro: "Illimités", elite: "Illimités" },
+  { feature: "Réservation en ligne",       starter: true,    pro: true,        elite: true },
+  { feature: "Page salon publique",        starter: true,    pro: true,        elite: true },
+  { feature: "Analytics & rapports",       starter: false,   pro: true,        elite: true },
+  { feature: "Badge Salon Vérifié",        starter: false,   pro: true,        elite: true },
+  { feature: "Mise en avant résultats",    starter: false,   pro: false,       elite: true },
 ];
 
 function Logo() {
   return (
-    <Link href="/" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 22, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--foreground)" }}>
+    <Link href="/" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 22, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--foreground)", textDecoration: "none" }}>
       <svg width="26" height="20" viewBox="0 0 28 22" fill="none">
         <path d="M2 14c4-8 8-8 12 0s8 8 12 0" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
       </svg>
@@ -118,14 +113,14 @@ export default function PricingPage() {
   return (
     <div style={{ minHeight: "100vh", background: "var(--background)" }}>
 
-      {/* NAV — matches home page exactly */}
+      {/* NAV */}
       <nav style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(255,255,255,0.95)", backdropFilter: "blur(12px)", borderBottom: "1px solid var(--border)", height: 64, display: "flex", alignItems: "center", padding: "0 24px", justifyContent: "space-between" }}>
         <Logo />
         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-          <Link href="/" style={{ fontSize: 14, color: "var(--muted-foreground)" }}>Accueil</Link>
-          <Link href="/pricing" style={{ fontSize: 14, fontWeight: 600, color: "var(--foreground)" }}>Pour les coiffeurs</Link>
-          <Link href="/auth/login" style={{ fontSize: 14, color: "var(--muted-foreground)" }}>Connexion</Link>
-          <Link href="/auth/register?role=barber_owner" style={{ borderRadius: 999, background: "var(--foreground)", color: "#fff", padding: "10px 20px", fontSize: 14, fontWeight: 600 }}>
+          <Link href="/" style={{ fontSize: 14, color: "var(--muted-foreground)", textDecoration: "none" }}>Accueil</Link>
+          <Link href="/pricing" style={{ fontSize: 14, fontWeight: 600, color: "var(--foreground)", textDecoration: "none" }}>Pour les coiffeurs</Link>
+          <Link href="/auth/login" style={{ fontSize: 14, color: "var(--muted-foreground)", textDecoration: "none" }}>Connexion</Link>
+          <Link href="/auth/register?role=barber_owner" style={{ borderRadius: 999, background: "var(--foreground)", color: "#fff", padding: "10px 20px", fontSize: 14, fontWeight: 600, textDecoration: "none" }}>
             Inscrire mon salon
           </Link>
         </div>
@@ -143,7 +138,7 @@ export default function PricingPage() {
           Des outils pensés pour les salons algériens. Simple, puissant, sans contrat.
         </p>
         <p style={{ marginTop: 12, fontSize: 13, color: "var(--muted-foreground)" }}>
-          ✓ 14 jours d'essai gratuit &nbsp;·&nbsp; ✓ Sans carte bancaire &nbsp;·&nbsp; ✓ Annulez à tout moment
+          ✓ Sans engagement &nbsp;·&nbsp; ✓ Annulez à tout moment &nbsp;·&nbsp; ✓ Paiement sécurisé Chargily
         </p>
       </section>
 
@@ -210,7 +205,7 @@ export default function PricingPage() {
         </div>
       </section>
 
-      {/* BOTTOM CTA — matches home page CTA band */}
+      {/* BOTTOM CTA */}
       <section style={{ background: "var(--foreground)", color: "#fff" }}>
         <div style={{ maxWidth: 640, margin: "0 auto", textAlign: "center", padding: "72px 24px" }}>
           <h2 style={{ fontSize: "clamp(1.5rem, 3vw, 2rem)", fontWeight: 700, letterSpacing: "-0.01em", marginBottom: 12 }}>
@@ -221,7 +216,7 @@ export default function PricingPage() {
           </p>
           <a
             href="mailto:contact@hassanly.dz"
-            style={{ display: "inline-block", background: "#fff", color: "var(--foreground)", padding: "12px 28px", borderRadius: 999, fontSize: 14, fontWeight: 600 }}
+            style={{ display: "inline-block", background: "#fff", color: "var(--foreground)", padding: "12px 28px", borderRadius: 999, fontSize: 14, fontWeight: 600, textDecoration: "none" }}
           >
             Nous contacter →
           </a>
@@ -265,30 +260,21 @@ function PlanCard({ plan, onSelect, loading }: { plan: typeof plans[0]; onSelect
       boxShadow: plan.featured ? "0 8px 32px rgba(217,119,6,0.12)" : "0 2px 8px rgba(0,0,0,0.04)",
       transform: plan.featured ? "translateY(-6px)" : "none",
     }}>
-      {/* Popular badge */}
       {plan.badge && (
         <div style={{ position: "absolute", top: -14, left: "50%", transform: "translateX(-50%)", background: "#d97706", color: "#fff", fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", padding: "4px 16px", borderRadius: 999, whiteSpace: "nowrap" }}>
           {plan.badge}
         </div>
       )}
-
-      {/* Plan name */}
       <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: plan.featured ? "#d97706" : "var(--muted-foreground)", marginBottom: 12 }}>
         {plan.name}
       </div>
-
-      {/* Price */}
       <div style={{ marginBottom: 24 }}>
         <span style={{ fontSize: "clamp(2rem, 4vw, 2.8rem)", fontWeight: 700, letterSpacing: "-0.02em", color: "var(--foreground)" }}>
           {plan.price}
         </span>
         <span style={{ fontSize: 14, color: "var(--muted-foreground)", marginLeft: 6 }}>{plan.period}</span>
       </div>
-
-      {/* Divider */}
       <div style={{ height: 1, background: plan.featured ? "#fde68a" : "var(--border)", marginBottom: 24 }} />
-
-      {/* Features */}
       <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", display: "flex", flexDirection: "column", gap: 12 }}>
         {plan.features.map((f, i) => (
           <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 14, color: "var(--foreground)", lineHeight: 1.4 }}>
@@ -297,33 +283,19 @@ function PlanCard({ plan, onSelect, loading }: { plan: typeof plans[0]; onSelect
           </li>
         ))}
       </ul>
-
-      {/* CTA */}
       <button
         onClick={() => onSelect(plan.id)}
         disabled={loading}
         style={{
-          width: "100%",
-          padding: "13px",
-          borderRadius: "var(--radius-sm)",
-          fontSize: 14,
-          fontWeight: 600,
+          width: "100%", padding: "13px", borderRadius: "var(--radius-sm)", fontSize: 14, fontWeight: 600,
           cursor: loading ? "wait" : "pointer",
           border: plan.featured ? "none" : "1.5px solid var(--border)",
           background: plan.featured ? "#d97706" : "transparent",
           color: plan.featured ? "#fff" : "var(--foreground)",
-          fontFamily: "inherit",
-          transition: "all 0.15s",
-          opacity: loading ? 0.7 : 1,
+          fontFamily: "inherit", transition: "all 0.15s", opacity: loading ? 0.7 : 1,
         }}
-        onMouseEnter={(e) => {
-          if (!loading) {
-            e.currentTarget.style.background = plan.featured ? "#b45309" : "var(--muted)";
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = plan.featured ? "#d97706" : "transparent";
-        }}
+        onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = plan.featured ? "#b45309" : "var(--muted)"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = plan.featured ? "#d97706" : "transparent"; }}
       >
         {loading ? "Chargement…" : plan.cta}
       </button>

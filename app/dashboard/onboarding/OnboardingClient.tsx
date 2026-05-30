@@ -15,9 +15,9 @@ const SERVICE_ICONS  = ['✂️','🪒','💈','🔥','👦','💎','🌿','✨'
 const BARBER_EMOJIS  = ['👨🏽','👨🏿','👨🏻','👨🏾','👨🏼','👨','👨‍🦱','👨‍🦳','👨‍🦲']
 
 const PLANS = [
-  { id: 'starter', name: 'Starter', price: 3000, desc: 'Idéal pour démarrer', features: ['1 profil coiffeur','Réservation en ligne',"Jusqu'à 5 services",'Notifications SMS'] },
-  { id: 'pro', name: 'Pro', price: 6500, desc: 'Le plus populaire', popular: true, features: ["Jusqu'à 5 coiffeurs","Services illimités","Analytics & rapports","Badge Salon Vérifié","Notifications SMS + WhatsApp"] },
-  { id: 'elite', name: 'Elite', price: 12000, desc: 'Pour les grandes enseignes', features: ['Coiffeurs illimités','Multi-adresses','Support prioritaire 24/7','Mise en avant','Programme fidélité'] },
+  { id: 'starter', name: 'Starter', price: 3000, desc: 'Idéal pour démarrer', features: ['1 profil coiffeur','Réservation en ligne',"Jusqu'à 5 services",'Page salon publique'] },
+  { id: 'pro', name: 'Pro', price: 6500, desc: 'Le plus populaire', popular: true, features: ["Jusqu'à 5 coiffeurs","Services illimités","Analytics & rapports","Badge Salon Vérifié"] },
+  { id: 'elite', name: 'Elite', price: 12000, desc: 'Pour les grandes enseignes', features: ['Coiffeurs illimités','Services illimités','Analytics & rapports','Badge Salon Vérifié','Mise en avant dans les résultats'] },
 ]
 
 type Profile = { full_name: string | null; phone: string | null; wilaya: string | null }

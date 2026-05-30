@@ -8,7 +8,7 @@ import { logoutAction } from '@/lib/auth-actions'
 import type { Shop, Profile } from '@/types/database'
 
 type Service = { id: string; shop_id: string; name: string; description: string | null; duration: number; price: number; icon: string; is_active: boolean }
-type Barber  = { id: string; shop_id: string; name: string; emoji: string; rating: number | null; review_count: number; bio: string | null }
+type Barber  = { id: string; shop_id: string; name: string; emoji: string; rating: number | null; review_count: number; bio: string | null; photo_url?: string | null }
 type Booking = { booked_at: string; barber_id: string | null }
 type Props   = { shop: Shop; services: Service[]; barbers: Barber[]; bookings: Booking[]; user: { user: any; profile: Profile | null } | null }
 
@@ -129,8 +129,11 @@ export default function ShopDetailClient({ shop, services, barbers, bookings, us
         <div style={{ position: 'absolute', inset: 0, backgroundImage: 'repeating-linear-gradient(60deg, rgba(200,133,74,0.03) 0, rgba(200,133,74,0.03) 1px, transparent 1px, transparent 48px)', pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(90deg, transparent, var(--copper) 40%, var(--copper) 60%, transparent)', opacity: 0.3 }} />
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '0 1.5rem', position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '1.75rem', flexWrap: 'wrap' }}>
-          <div style={{ width: 72, height: 72, background: 'var(--bg-3)', border: '1px solid var(--border-2)', borderRadius: 'var(--r-lg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.2rem', flexShrink: 0 }}>
-            ✂️
+          <div style={{ width: 72, height: 72, background: 'var(--bg-3)', border: '1px solid var(--border-2)', borderRadius: 'var(--r-lg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.2rem', flexShrink: 0, overflow: 'hidden' }}>
+            {shop.image_url
+              ? <img src={shop.image_url} alt={shop.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : '✂️'
+            }
           </div>
           <div style={{ flex: 1 }}>
             <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.5rem, 4vw, 2.1rem)', color: 'var(--ink)', marginBottom: 8, fontWeight: 400 }}>
@@ -191,7 +194,10 @@ export default function ShopDetailClient({ shop, services, barbers, bookings, us
                 const sel = selectedBarber?.id === b.id
                 return (
                   <div key={b.id} onClick={() => setBarber(sel ? null : b)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px 10px', background: sel ? 'var(--copper-dim)' : 'var(--bg-1)', cursor: 'pointer', transition: 'background 0.15s', borderTop: `2px solid ${sel ? 'var(--copper)' : 'transparent'}` }}>
-                    <div style={{ fontSize: '1.8rem', marginBottom: 8 }}>{b.emoji}</div>
+                    {b.photo_url
+                      ? <img src={b.photo_url} alt={b.name} style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover', marginBottom: 8, border: sel ? '2px solid var(--copper)' : '2px solid var(--border)' }} />
+                      : <div style={{ fontSize: '1.8rem', marginBottom: 8 }}>{b.emoji}</div>
+                    }
                     <div style={{ fontWeight: sel ? 600 : 500, fontSize: '0.8rem', color: 'var(--ink)', textAlign: 'center', marginBottom: 3 }}>{b.name}</div>
                     {b.rating
                       ? <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.68rem', color: 'var(--ink-3)' }}>★ {b.rating} ({b.review_count})</div>

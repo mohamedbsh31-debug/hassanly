@@ -53,8 +53,8 @@ function ShopCard({ shop }: { shop: ShopDisplay }) {
       }}>
         {/* Image */}
         <div style={{ position: 'relative', aspectRatio: '3/2', overflow: 'hidden', background: '#EDE4CC' }}>
-          {shop.image ? (
-            <img src={shop.image} alt={shop.name} loading="lazy" className="card-img"
+          {shop.image_url ? (
+            <img src={shop.image_url} alt={shop.name} loading="lazy" className="card-img"
               style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s cubic-bezier(.22,.68,0,1.2)' }} />
           ) : (
             <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2.8rem', background: '#EDE4CC' }}>

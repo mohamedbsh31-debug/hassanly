@@ -1,4 +1,4 @@
-export type UserRole = 'client' | 'barber_owner' | 'admin'
+export type UserRole = 'client' | 'barber_owner' | 'admin' | 'banned'
 
 export type Database = {
   public: {

@@ -1,8 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
-const PROTECTED_ROUTES = ['/dashboard', '/profile', '/bookings']
+const PROTECTED_ROUTES = ['/dashboard', '/profile', '/bookings', '/admin']
 const BARBER_ONLY_ROUTES = ['/dashboard']
+const ADMIN_ONLY_ROUTES  = ['/admin']
 const AUTH_ROUTES = ['/auth/login', '/auth/register']
 
 export async function middleware(request: NextRequest) {
@@ -50,6 +51,18 @@ export async function middleware(request: NextRequest) {
       .single()
 
     if (profile?.role !== 'barber_owner' && profile?.role !== 'admin') {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+  }
+
+  if (user && ADMIN_ONLY_ROUTES.some((r) => path.startsWith(r))) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    if (profile?.role !== 'admin') {
       return NextResponse.redirect(new URL('/', request.url))
     }
   }

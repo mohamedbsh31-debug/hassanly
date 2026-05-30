@@ -2,14 +2,21 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServerSupabaseClient } from '@/lib/supabase'
+import { getPlanLimits } from '@/lib/plan-limits'
 
-async function getOwnerShopId(supabase: any, userId: string) {
+async function getOwnerShop(supabase: any, userId: string) {
   const { data } = await supabase
     .from('shops')
-    .select('id')
+    .select('id, plan')
     .eq('owner_id', userId)
     .single()
-  return data?.id ?? null
+  return data ?? null
+}
+
+// kept for backward compat
+async function getOwnerShopId(supabase: any, userId: string) {
+  const shop = await getOwnerShop(supabase, userId)
+  return shop?.id ?? null
 }
 
 export async function addServiceAction(formData: FormData) {
@@ -17,8 +24,21 @@ export async function addServiceAction(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Non autorisé' }
 
-  const shopId = await getOwnerShopId(supabase, user.id)
-  if (!shopId) return { error: 'Salon introuvable' }
+  const shop = await getOwnerShop(supabase, user.id)
+  if (!shop) return { error: 'Salon introuvable' }
+  const shopId = shop.id
+
+  // ── Plan limit: max services ─────────────────────────────────────────────
+  const limits = getPlanLimits(shop.plan)
+  if (limits.maxServices !== -1) {
+    const { count } = await supabase
+      .from('services')
+      .select('id', { count: 'exact', head: true })
+      .eq('shop_id', shopId)
+    if ((count ?? 0) >= limits.maxServices) {
+      return { error: `Votre formule ${shop.plan} est limitée à ${limits.maxServices} services. Passez à Pro pour en ajouter plus.` }
+    }
+  }
 
   const name     = (formData.get('name') as string)?.trim()
   const duration = parseInt(formData.get('duration') as string)

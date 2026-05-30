@@ -2,14 +2,20 @@
 
 import { revalidatePath } from 'next/cache'
 import { createServerSupabaseClient } from '@/lib/supabase'
+import { getPlanLimits } from '@/lib/plan-limits'
 
-async function getOwnerShopId(supabase: any, userId: string) {
+async function getOwnerShop(supabase: any, userId: string) {
   const { data } = await supabase
     .from('shops')
-    .select('id')
+    .select('id, plan')
     .eq('owner_id', userId)
     .single()
-  return data?.id ?? null
+  return data ?? null
+}
+
+async function getOwnerShopId(supabase: any, userId: string) {
+  const shop = await getOwnerShop(supabase, userId)
+  return shop?.id ?? null
 }
 
 export async function addBarberAction(formData: FormData) {
@@ -17,8 +23,22 @@ export async function addBarberAction(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Non autorisé' }
 
-  const shopId = await getOwnerShopId(supabase, user.id)
-  if (!shopId) return { error: 'Salon introuvable' }
+  const shop = await getOwnerShop(supabase, user.id)
+  if (!shop) return { error: 'Salon introuvable' }
+  const shopId = shop.id
+
+  // ── Plan limit: max barbers ──────────────────────────────────────────────
+  const limits = getPlanLimits(shop.plan)
+  if (limits.maxBarbers !== -1) {
+    const { count } = await supabase
+      .from('barbers')
+      .select('id', { count: 'exact', head: true })
+      .eq('shop_id', shopId)
+    if ((count ?? 0) >= limits.maxBarbers) {
+      const nextPlan = shop.plan === 'starter' ? 'Pro' : 'Elite'
+      return { error: `Votre formule ${shop.plan} est limitée à ${limits.maxBarbers} coiffeur(s). Passez à ${nextPlan} pour en ajouter plus.` }
+    }
+  }
 
   const name  = (formData.get('name') as string)?.trim()
   const emoji = formData.get('emoji') as string

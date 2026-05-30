@@ -7,6 +7,7 @@ import { logoutAction } from '@/lib/auth-actions'
 import ServicesManager from './services/ServicesManager'
 import StaffManager from './staff/StaffManager'
 import WorkingHoursManager from './hours/WorkingHoursManager'
+import { getPlanLimits } from '@/lib/plan-limits'
 
 import type { WeekSchedule } from '@/lib/working-hours-actions'
 
@@ -16,7 +17,7 @@ type Booking  = { id: string; booked_at: string; duration: number; price: number
 type Service  = { id: string; name: string; duration: number; price: number; icon: string }
 type Barber   = { id: string; name: string; emoji: string; rating: number | null; review_count: number }
 type Props    = { profile: Profile; shop: Shop; bookings: Booking[]; services: Service[]; barbers: Barber[]; shopHours: WeekSchedule | null; barberHours: Record<string, WeekSchedule | null> }
-type Tab      = 'overview' | 'appointments' | 'clients' | 'services' | 'staff' | 'hours' | 'billing'
+type Tab      = 'overview' | 'appointments' | 'clients' | 'services' | 'staff' | 'hours' | 'billing' | 'analytics'
 
 const TABS: { id: Tab; icon: string; label: string }[] = [
   { id: 'overview',     icon: '📊', label: "Vue d'ensemble" },
@@ -25,6 +26,7 @@ const TABS: { id: Tab; icon: string; label: string }[] = [
   { id: 'services',     icon: '✂️',  label: 'Services & Tarifs' },
   { id: 'staff',        icon: '👨‍💼', label: 'Mon équipe' },
   { id: 'hours',        icon: '🕐', label: 'Horaires' },
+  { id: 'analytics',   icon: '📈', label: 'Analytiques' },
   { id: 'billing',      icon: '💳', label: 'Abonnement' },
 ]
 
@@ -56,7 +58,7 @@ function isToday(iso: string) {
 export default function DashboardClient({ profile, shop, bookings, services, barbers, shopHours, barberHours }: Props) {
   const searchParams = useSearchParams()
   const tabParam  = searchParams.get('tab') as Tab | null
-  const validTabs: Tab[] = ['overview', 'appointments', 'clients', 'services', 'staff', 'hours', 'billing']
+  const validTabs: Tab[] = ['overview', 'appointments', 'clients', 'services', 'staff', 'hours', 'analytics', 'billing']
   const initialTab: Tab  = tabParam && validTabs.includes(tabParam) ? tabParam : 'overview'
 
   const [activeTab,    setActiveTab]    = useState<Tab>(initialTab)
@@ -67,6 +69,7 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
 
   const firstName    = profile.full_name?.split(' ')[0] ?? 'vous'
   const pendingCount = localBookings.filter(b => b.status === 'pending').length
+  const planLimits   = getPlanLimits(shop.plan)
 
   function showToast(msg: string) {
     setToast(msg)
@@ -98,18 +101,20 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
   function navItem(tab: Tab) {
     const t   = TABS.find(x => x.id === tab)!
     const active = activeTab === tab
+    const locked = tab === 'analytics' && !planLimits.hasAnalytics
     return (
       <button
         key={tab}
-        onClick={() => { setActiveTab(tab); setSidebarOpen(false) }}
+        onClick={() => { if (!locked) { setActiveTab(tab); setSidebarOpen(false) } }}
         style={{
           width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 10,
-          padding: '10px 20px', border: 'none', cursor: 'pointer', fontSize: 14, fontFamily: 'inherit',
+          padding: '10px 20px', border: 'none', cursor: locked ? 'not-allowed' : 'pointer', fontSize: 14, fontFamily: 'inherit',
           borderLeft: `3px solid ${active ? '#d97706' : 'transparent'}`,
           background: active ? '#fff7ed' : 'transparent',
-          color: active ? '#d97706' : '#6b7280',
+          color: active ? '#d97706' : locked ? '#c4c9d4' : '#6b7280',
           fontWeight: active ? 600 : 400,
           transition: 'all 0.15s',
+          opacity: locked ? 0.6 : 1,
         }}
       >
         <span style={{ fontSize: 16 }}>{t.icon}</span>
@@ -119,6 +124,7 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
             {pendingCount}
           </span>
         )}
+        {locked && <span style={{ marginLeft: 'auto', fontSize: 12 }}>🔒</span>}
       </button>
     )
   }
@@ -148,14 +154,21 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
         <div style={{ padding: '16px 20px', borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: '#111827', marginBottom: 2 }}>{shop.name}</div>
           <div style={{ fontSize: 12, color: '#6b7280', marginBottom: 8 }}>{shop.wilaya}</div>
-          <span style={{
-            display: 'inline-block', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999,
-            background: shop.is_active ? '#ecfdf5' : '#fff8e6',
-            color: shop.is_active ? '#065f46' : '#92400e',
-            border: `1px solid ${shop.is_active ? '#6ee7b7' : '#fde68a'}`,
-          }}>
-            {shop.is_active ? `✓ ${PLAN_LABELS[shop.plan]}` : '⏳ En attente'}
-          </span>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <span style={{
+              display: 'inline-block', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999,
+              background: shop.is_active ? '#ecfdf5' : '#fff8e6',
+              color: shop.is_active ? '#065f46' : '#92400e',
+              border: `1px solid ${shop.is_active ? '#6ee7b7' : '#fde68a'}`,
+            }}>
+              {shop.is_active ? `✓ ${PLAN_LABELS[shop.plan]}` : '⏳ En attente'}
+            </span>
+            {planLimits.hasVerifiedBadge && shop.is_verified && (
+              <span style={{ display: 'inline-block', fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999, background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
+                ✓ Vérifié
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Nav */}
@@ -267,10 +280,36 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
           )}
 
           {/* ── SERVICES ───────────────────────────────────────────── */}
-          {activeTab === 'services' && <ServicesManager services={services} bookings={localBookings} />}
+          {activeTab === 'services' && (
+            <div>
+              {planLimits.maxServices !== -1 && (
+                <PlanUsageBanner
+                  used={services.length}
+                  max={planLimits.maxServices}
+                  label="services"
+                  plan={shop.plan}
+                  upgradeTo="Pro"
+                />
+              )}
+              <ServicesManager services={services} bookings={localBookings} />
+            </div>
+          )}
 
           {/* ── STAFF ──────────────────────────────────────────────── */}
-          {activeTab === 'staff' && <StaffManager barbers={barbers} bookings={localBookings} />}
+          {activeTab === 'staff' && (
+            <div>
+              {planLimits.maxBarbers !== -1 && (
+                <PlanUsageBanner
+                  used={barbers.length}
+                  max={planLimits.maxBarbers}
+                  label="coiffeur(s)"
+                  plan={shop.plan}
+                  upgradeTo="Pro"
+                />
+              )}
+              <StaffManager barbers={barbers} bookings={localBookings} />
+            </div>
+          )}
 
           {/* ── HOURS ──────────────────────────────────────────────── */}
           {activeTab === 'hours' && (
@@ -281,6 +320,18 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
               barbers={barbers}
               barberHours={barberHours}
             />
+          )}
+
+          {/* ── ANALYTICS (Pro/Elite only) ──────────────────────────── */}
+          {activeTab === 'analytics' && (
+            planLimits.hasAnalytics
+              ? <AnalyticsTab bookings={localBookings} />
+              : <LockedFeature
+                  icon="📈"
+                  title="Analytiques — Formule Pro ou Elite"
+                  description="Accédez aux statistiques avancées de votre salon : revenus par période, services les plus demandés, taux d'occupation et fidélisation clients."
+                  ctaLabel="Passer à Pro — 6 500 DA/mois"
+                />
           )}
 
           {/* ── BILLING ────────────────────────────────────────────── */}
@@ -477,6 +528,97 @@ function BillingTab({ shop }: { shop: Shop }) {
         </div>
         Commission Chargily : ~2% sur les transactions
       </div>
+    </div>
+  )
+}
+
+// ─── Analytics Tab (Pro/Elite) ────────────────────────────────────────────────
+function AnalyticsTab({ bookings }: { bookings: Booking[] }) {
+  const months = Array.from({ length: 6 }, (_, i) => {
+    const d = new Date()
+    d.setMonth(d.getMonth() - (5 - i))
+    return { label: d.toLocaleDateString('fr-FR', { month: 'short' }), m: d.getMonth(), y: d.getFullYear() }
+  })
+
+  const revenueByMonth = months.map(({ label, m, y }) => ({
+    label,
+    revenue: bookings
+      .filter(b => b.status === 'completed')
+      .filter(b => { const d = new Date(b.booked_at); return d.getMonth() === m && d.getFullYear() === y })
+      .reduce((s, b) => s + b.price, 0),
+    count: bookings.filter(b => { const d = new Date(b.booked_at); return d.getMonth() === m && d.getFullYear() === y }).length,
+  }))
+
+  const maxRev = Math.max(...revenueByMonth.map(r => r.revenue), 1)
+
+  const totalRevenue   = bookings.filter(b => b.status === 'completed').reduce((s, b) => s + b.price, 0)
+  const completedCount = bookings.filter(b => b.status === 'completed').length
+  const cancelRate     = bookings.length ? Math.round(bookings.filter(b => b.status === 'cancelled').length / bookings.length * 100) : 0
+
+  return (
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 16, marginBottom: 24 }}>
+        <StatCard label="Revenu total" value={`${totalRevenue.toLocaleString()} DA`} />
+        <StatCard label="RDV terminés"  value={String(completedCount)} />
+        <StatCard label="Taux annulation" value={`${cancelRate}%`} />
+      </div>
+
+      <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 20, marginBottom: 20 }}>
+        <div style={{ fontSize: 14, fontWeight: 600, color: '#111827', marginBottom: 16 }}>Revenu mensuel (DA)</div>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 12, height: 160, paddingBottom: 8, borderBottom: '1px solid #f3f4f6' }}>
+          {revenueByMonth.map(r => (
+            <div key={r.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+              <div style={{ fontSize: 11, color: '#6b7280' }}>{r.revenue > 0 ? `${(r.revenue / 1000).toFixed(0)}k` : ''}</div>
+              <div style={{ width: '100%', maxWidth: 40, background: '#d97706', borderRadius: '4px 4px 0 0', height: `${(r.revenue / maxRev) * 120}px`, minHeight: r.revenue ? 4 : 2, transition: 'height 0.4s', opacity: r.revenue ? 1 : 0.2 }} />
+              <div style={{ fontSize: 12, color: '#9ca3af' }}>{r.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Plan Usage Banner ────────────────────────────────────────────────────────
+function PlanUsageBanner({ used, max, label, plan, upgradeTo }: { used: number; max: number; label: string; plan: string; upgradeTo: string }) {
+  const pct   = Math.min(Math.round(used / max * 100), 100)
+  const nearLimit = used >= max - 1
+  const atLimit   = used >= max
+
+  if (!nearLimit) return null // only show when close or at limit
+
+  return (
+    <div style={{
+      background: atLimit ? '#fef2f2' : '#fff7ed',
+      border: `1px solid ${atLimit ? '#fecaca' : '#fed7aa'}`,
+      borderRadius: 10, padding: '12px 16px', marginBottom: 16,
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12,
+    }}>
+      <div>
+        <div style={{ fontSize: 13, fontWeight: 600, color: atLimit ? '#dc2626' : '#92400e', marginBottom: 2 }}>
+          {atLimit ? `🔒 Limite atteinte — ${used}/${max} ${label}` : `⚠️ Limite proche — ${used}/${max} ${label}`}
+        </div>
+        <div style={{ fontSize: 12, color: '#9ca3af' }}>
+          Passez à {upgradeTo} pour en ajouter plus
+        </div>
+      </div>
+      <a href="/dashboard?tab=billing" style={{ background: '#d97706', color: '#fff', borderRadius: 7, padding: '7px 14px', fontSize: 12, fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}>
+        Passer à {upgradeTo} →
+      </a>
+    </div>
+  )
+}
+
+// ─── Locked Feature ───────────────────────────────────────────────────────────
+function LockedFeature({ icon, title, description, ctaLabel }: { icon: string; title: string; description: string; ctaLabel: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 320, textAlign: 'center', padding: 40 }}>
+      <div style={{ fontSize: 48, marginBottom: 16 }}>{icon}</div>
+      <div style={{ fontSize: 18, fontWeight: 700, color: '#111827', marginBottom: 10 }}>{title}</div>
+      <p style={{ fontSize: 14, color: '#6b7280', maxWidth: 360, lineHeight: 1.7, marginBottom: 24 }}>{description}</p>
+      <a href="/dashboard?tab=billing" style={{ background: '#d97706', color: '#fff', borderRadius: 8, padding: '11px 24px', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>
+        {ctaLabel}
+      </a>
     </div>
   )
 }

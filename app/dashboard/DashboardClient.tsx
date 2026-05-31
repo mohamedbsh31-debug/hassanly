@@ -159,11 +159,8 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
       }}>
         {/* Logo */}
         <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #3D3020' }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', color: '#F5EFE0', textDecoration: 'none', fontFamily: "'Playfair Display', Georgia, serif" }}>
-            <svg width="22" height="16" viewBox="0 0 28 22" fill="none">
-              <path d="M2 14c4-8 8-8 12 0s8 8 12 0" stroke="#F5EFE0" strokeWidth="2.5" strokeLinecap="round" />
-            </svg>
-            hass<span style={{ color: '#C4793A' }}>anly</span>
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+            <img src="/hassanly-logo.png" alt="Hassanly" style={{ height: 40, width: 'auto', objectFit: 'contain' }} />
           </Link>
         </div>
 

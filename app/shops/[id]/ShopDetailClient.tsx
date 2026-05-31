@@ -111,9 +111,7 @@ export default function ShopDetailClient({ shop, services, barbers, bookings, us
       {/* NAV */}
       <nav style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(13,12,10,0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--border)', height: 58, display: 'flex', alignItems: 'center', padding: '0 2rem', justifyContent: 'space-between' }}>
         <Link href="/" style={{ textDecoration: 'none' }}>
-          <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', color: 'var(--ink)', lineHeight: 1 }}>
-            Hass<span style={{ color: 'var(--copper)' }}>anly</span>
-          </div>
+          <img src="/hassanly-logo.png" alt="Hassanly" style={{ height: 38, width: 'auto', objectFit: 'contain' }} />
         </Link>
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <Link href="/" style={{ color: 'var(--ink-3)', fontSize: '0.85rem' }}>← Accueil</Link>

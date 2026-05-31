@@ -85,11 +85,8 @@ const tableRows = [
 
 function Logo() {
   return (
-    <Link href="/" style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 22, fontWeight: 700, letterSpacing: "-0.02em", color: "var(--foreground)", textDecoration: "none" }}>
-      <svg width="26" height="20" viewBox="0 0 28 22" fill="none">
-        <path d="M2 14c4-8 8-8 12 0s8 8 12 0" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-      </svg>
-      <span>hass<span style={{ color: "#d97706" }}>anly</span></span>
+    <Link href="/" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
+      <img src="/hassanly-logo.png" alt="Hassanly" style={{ height: 44, width: "auto", objectFit: "contain" }} />
     </Link>
   );
 }

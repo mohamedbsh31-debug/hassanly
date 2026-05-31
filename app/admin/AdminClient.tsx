@@ -78,9 +78,8 @@ export default function AdminClient({ adminProfile, profiles, shops, bookings, p
       {/* ── Top bar ── */}
       <header style={{ background: '#111827', color: '#fff', height: 56, display: 'flex', alignItems: 'center', padding: '0 24px', gap: 16, flexShrink: 0, zIndex: 50, position: 'sticky', top: 0 }}>
         <button onClick={() => setSidebar(!sidebarOpen)} style={{ background: 'none', border: 'none', color: '#9ca3af', fontSize: 20, cursor: 'pointer', display: 'none' }} className="admin-burger">☰</button>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 18, fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>
-          <svg width="22" height="16" viewBox="0 0 28 22" fill="none"><path d="M2 14c4-8 8-8 12 0s8 8 12 0" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/></svg>
-          hass<span style={{ color: '#d97706' }}>anly</span>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+          <img src="/hassanly-logo.png" alt="Hassanly" style={{ height: 36, width: 'auto', objectFit: 'contain' }} />
         </Link>
         <span style={{ background: '#dc2626', color: '#fff', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 4 }}>ADMIN</span>
         <span style={{ flex: 1 }} />

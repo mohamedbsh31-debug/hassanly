@@ -97,9 +97,7 @@ export default function OnboardingClient({ profile }: { profile: Profile | null 
 
       {/* Logo */}
       <div style={{ marginBottom: '2.5rem', textAlign: 'center' }}>
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.75rem', color: 'var(--ink)', lineHeight: 1 }}>
-          Hass<span style={{ color: 'var(--copper)' }}>anly</span>
-        </div>
+        <img src="/hassanly-logo.png" alt="Hassanly" style={{ height: 68, width: 'auto', objectFit: 'contain' }} />
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--ink-3)', letterSpacing: '0.15em', textTransform: 'uppercase', marginTop: 4 }}>Configuration du salon</div>
       </div>
 

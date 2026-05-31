@@ -29,13 +29,12 @@ type Props = { shops: Shop[]; user: { user: any; profile: Profile | null } | nul
 
 function Logo({ light = false }: { light?: boolean }) {
   return (
-    <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 7, textDecoration: 'none' }}>
-      <svg width="24" height="18" viewBox="0 0 28 22" fill="none">
-        <path d="M2 14c4-8 8-8 12 0s8 8 12 0" stroke={light ? '#F5EFE0' : '#2A2418'} strokeWidth="2.5" strokeLinecap="round" />
-      </svg>
-      <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', color: light ? '#F5EFE0' : '#2A2418' }}>
-        hass<span style={{ color: '#C4793A' }}>anly</span>
-      </span>
+    <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
+      <img
+        src="/hassanly-logo.png"
+        alt="Hassanly"
+        style={{ height: 44, width: 'auto', objectFit: 'contain', filter: light ? 'brightness(0) invert(1)' : 'none' }}
+      />
     </Link>
   )
 }

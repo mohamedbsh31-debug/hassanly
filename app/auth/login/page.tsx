@@ -25,7 +25,7 @@ function LoginForm() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-logo">
-          Hass<span>anly</span>
+          <img src="/hassanly-logo.png" alt="Hassanly" style={{ height: 72, width: 'auto', objectFit: 'contain' }} />
           <div className="auth-logo-sub">الجزائر · Algeria</div>
         </div>
 

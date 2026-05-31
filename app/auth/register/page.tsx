@@ -46,7 +46,7 @@ function RegisterForm() {
     <div className="auth-page">
       <div className="auth-card" style={{ maxWidth: 480 }}>
         <div className="auth-logo">
-          Hass<span>anly</span>
+          <img src="/hassanly-logo.png" alt="Hassanly" style={{ height: 72, width: 'auto', objectFit: 'contain' }} />
           <div className="auth-logo-sub">الجزائر · Algeria</div>
         </div>
 

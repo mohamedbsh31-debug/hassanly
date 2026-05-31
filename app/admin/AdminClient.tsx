@@ -3,6 +3,7 @@
 import { useState, useMemo, useTransition } from 'react'
 import Link from 'next/link'
 import { logoutAction } from '@/lib/auth-actions'
+import { Logo } from '@/components/Logo'
 import {
   verifyShopAction,
   banShopAction,
@@ -78,9 +79,7 @@ export default function AdminClient({ adminProfile, profiles, shops, bookings, p
       {/* ── Top bar ── */}
       <header style={{ background: '#111827', color: '#fff', height: 56, display: 'flex', alignItems: 'center', padding: '0 24px', gap: 16, flexShrink: 0, zIndex: 50, position: 'sticky', top: 0 }}>
         <button onClick={() => setSidebar(!sidebarOpen)} style={{ background: 'none', border: 'none', color: '#9ca3af', fontSize: 20, cursor: 'pointer', display: 'none' }} className="admin-burger">☰</button>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-          <img src="/hassanly-logo.png" alt="Hassanly" style={{ height: 36, width: 'auto', objectFit: 'contain' }} />
-        </Link>
+        <Logo height={36} light />
         <span style={{ background: '#dc2626', color: '#fff', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '3px 8px', borderRadius: 4 }}>ADMIN</span>
         <span style={{ flex: 1 }} />
         <span style={{ fontSize: 13, color: '#9ca3af' }}>{adminProfile.full_name}</span>

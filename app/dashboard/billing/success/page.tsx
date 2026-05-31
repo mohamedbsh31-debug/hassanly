@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { createClient } from '@supabase/supabase-js'
+import { Logo } from '@/components/Logo'
 
 type Props = { searchParams: Promise<{ plan?: string; shop_id?: string }> }
 
@@ -58,7 +59,7 @@ export default async function PaymentSuccessPage({ searchParams }: Props) {
 
         {/* Logo */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.75rem' }}>
-          <img src="/hassanly-logo.png" alt="Hassanly" style={{ height: 60, width: 'auto', objectFit: 'contain' }} />
+          <Logo height={48} />
         </div>
 
         {/* Success icon */}

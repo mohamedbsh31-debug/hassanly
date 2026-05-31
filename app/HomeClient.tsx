@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { logoutAction } from '@/lib/auth-actions'
 import type { Shop, Profile } from '@/types/database'
+import { Logo } from '@/components/Logo'
 
 const DEMO_SHOPS = [
   { id: 'demo-1', name: 'Elite Cuts Studio', emoji: '✂️', rating: 4.9, reviews: 387, wilaya: 'Oran', quartier: 'Bir El Djir', description: 'Spécialistes du Skin Fade et dégradé américain.', tags: ['Fade', 'Barbe', 'Luxe'], min_price: 600, badge: 'Top Salon', plan: 'elite', image: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=800&q=80' },
@@ -26,18 +27,6 @@ const ALL_WILAYAS = ['Toutes', 'Alger', 'Oran', 'Constantine', 'Annaba', 'Tlemce
 
 type ShopDisplay = { id: string; name: string; emoji?: string; rating: number | null; reviews?: number; wilaya: string; quartier?: string; description: string | null; tags?: string[]; min_price?: number; badge?: string; plan: string; image?: string; image_url?: string | null }
 type Props = { shops: Shop[]; user: { user: any; profile: Profile | null } | null }
-
-function Logo({ light = false }: { light?: boolean }) {
-  return (
-    <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-      <img
-        src="/hassanly-logo.png"
-        alt="Hassanly"
-        style={{ height: 44, width: 'auto', objectFit: 'contain', filter: light ? 'brightness(0) invert(1)' : 'none' }}
-      />
-    </Link>
-  )
-}
 
 function ShopCard({ shop }: { shop: ShopDisplay }) {
   return (
@@ -155,7 +144,7 @@ export default function HomeClient({ shops, user }: Props) {
 
       {/* ── NAV ── */}
       <nav style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(254,252,247,0.94)', backdropFilter: 'blur(14px)', borderBottom: '1px solid #D9CEAF', height: 62, display: 'flex', alignItems: 'center', padding: '0 28px', justifyContent: 'space-between' }}>
-        <Logo />
+        <Logo height={44} />
         <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
           <Link href="/" style={navLinkStyle}>Accueil</Link>
           <Link href="/pricing" style={{ ...navLinkStyle, color: '#9A9E8A' }}>Pour les coiffeurs</Link>
@@ -368,7 +357,7 @@ export default function HomeClient({ shops, user }: Props) {
       {/* ── FOOTER ── */}
       <footer style={{ borderTop: '1px solid #D9CEAF', background: '#FEFCF7' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '32px 24px', fontSize: 13, color: '#9A9E8A' }}>
-          <Logo />
+          <Logo height={44} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: "'Tajawal', sans-serif" }}>
             <span>الجزائر</span>
             <span style={{ opacity: 0.4 }}>·</span>

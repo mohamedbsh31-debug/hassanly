@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { logoutAction } from '@/lib/auth-actions'
 import { uploadShopPhotoAction } from '@/lib/upload-actions'
+import { Logo } from '@/components/Logo'
 import ServicesManager from './services/ServicesManager'
 import StaffManager from './staff/StaffManager'
 import WorkingHoursManager from './hours/WorkingHoursManager'
@@ -159,9 +160,7 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
       }}>
         {/* Logo */}
         <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid #3D3020' }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
-            <img src="/hassanly-logo.png" alt="Hassanly" style={{ height: 40, width: 'auto', objectFit: 'contain' }} />
-          </Link>
+          <Logo height={38} light />
         </div>
 
         {/* Shop info */}

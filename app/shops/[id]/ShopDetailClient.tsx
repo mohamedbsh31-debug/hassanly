@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { createBookingAction } from '@/lib/booking-actions'
 import { logoutAction } from '@/lib/auth-actions'
 import type { Shop, Profile } from '@/types/database'
+import { Logo } from '@/components/Logo'
 
 type Service = { id: string; shop_id: string; name: string; description: string | null; duration: number; price: number; icon: string; is_active: boolean }
 type Barber  = { id: string; shop_id: string; name: string; emoji: string; rating: number | null; review_count: number; bio: string | null; photo_url?: string | null }
@@ -110,9 +111,7 @@ export default function ShopDetailClient({ shop, services, barbers, bookings, us
 
       {/* NAV */}
       <nav style={{ position: 'sticky', top: 0, zIndex: 100, background: 'rgba(13,12,10,0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--border)', height: 58, display: 'flex', alignItems: 'center', padding: '0 2rem', justifyContent: 'space-between' }}>
-        <Link href="/" style={{ textDecoration: 'none' }}>
-          <img src="/hassanly-logo.png" alt="Hassanly" style={{ height: 38, width: 'auto', objectFit: 'contain' }} />
-        </Link>
+        <Logo height={38} light />
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <Link href="/" style={{ color: 'var(--ink-3)', fontSize: '0.85rem' }}>← Accueil</Link>
           {user

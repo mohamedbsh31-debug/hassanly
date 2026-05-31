@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { createShopAction } from '@/lib/shop-actions'
+import { Logo } from '@/components/Logo'
 
 const WILAYAS = [
   'Adrar','Chlef','Laghouat','Oum El Bouaghi','Batna','Béjaïa','Biskra','Béchar','Blida','Bouira',
@@ -97,8 +98,8 @@ export default function OnboardingClient({ profile }: { profile: Profile | null 
 
       {/* Logo */}
       <div style={{ marginBottom: '2.5rem', textAlign: 'center' }}>
-        <img src="/hassanly-logo.png" alt="Hassanly" style={{ height: 68, width: 'auto', objectFit: 'contain' }} />
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--ink-3)', letterSpacing: '0.15em', textTransform: 'uppercase', marginTop: 4 }}>Configuration du salon</div>
+        <Logo height={52} />
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.6rem', color: 'var(--ink-3)', letterSpacing: '0.15em', textTransform: 'uppercase', marginTop: 8 }}>Configuration du salon</div>
       </div>
 
       {/* Steps indicator */}

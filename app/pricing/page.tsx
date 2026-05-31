@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase-browser";
+import { Logo } from "@/components/Logo";
 
 const plans = [
   {
@@ -83,13 +84,6 @@ const tableRows = [
   { feature: "Mise en avant résultats",    starter: false,   pro: false,       elite: true },
 ];
 
-function Logo() {
-  return (
-    <Link href="/" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
-      <img src="/hassanly-logo.png" alt="Hassanly" style={{ height: 44, width: "auto", objectFit: "contain" }} />
-    </Link>
-  );
-}
 
 export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -112,7 +106,7 @@ export default function PricingPage() {
 
       {/* NAV */}
       <nav style={{ position: "sticky", top: 0, zIndex: 100, background: "rgba(255,255,255,0.95)", backdropFilter: "blur(12px)", borderBottom: "1px solid var(--border)", height: 64, display: "flex", alignItems: "center", padding: "0 24px", justifyContent: "space-between" }}>
-        <Logo />
+        <Logo height={44} />
         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
           <Link href="/" style={{ fontSize: 14, color: "var(--muted-foreground)", textDecoration: "none" }}>Accueil</Link>
           <Link href="/pricing" style={{ fontSize: 14, fontWeight: 600, color: "var(--foreground)", textDecoration: "none" }}>Pour les coiffeurs</Link>
@@ -223,7 +217,7 @@ export default function PricingPage() {
       {/* FOOTER */}
       <footer style={{ borderTop: "1px solid var(--border)", background: "#fff" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 16, padding: "40px 24px", fontSize: 13, color: "var(--muted-foreground)" }}>
-          <Logo />
+          <Logo height={44} />
           <p>© {new Date().getFullYear()} hassanly. Tous droits réservés.</p>
         </div>
       </footer>

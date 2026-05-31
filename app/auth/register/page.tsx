@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { registerAction } from '@/lib/auth-actions'
+import { Logo } from '@/components/Logo'
 
 const WILAYAS = [
   'Adrar','Chlef','Laghouat','Oum El Bouaghi','Batna','Béjaïa','Biskra',
@@ -46,7 +47,7 @@ function RegisterForm() {
     <div className="auth-page">
       <div className="auth-card" style={{ maxWidth: 480 }}>
         <div className="auth-logo">
-          <img src="/hassanly-logo.png" alt="Hassanly" style={{ height: 72, width: 'auto', objectFit: 'contain' }} />
+          <Logo height={52} />
           <div className="auth-logo-sub">الجزائر · Algeria</div>
         </div>
 

@@ -4,6 +4,7 @@ import { useState, useTransition, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { loginAction } from '@/lib/auth-actions'
+import { Logo } from '@/components/Logo'
 
 function LoginForm() {
   const [error, setError] = useState<string | null>(null)
@@ -25,7 +26,7 @@ function LoginForm() {
     <div className="auth-page">
       <div className="auth-card">
         <div className="auth-logo">
-          <img src="/hassanly-logo.png" alt="Hassanly" style={{ height: 72, width: 'auto', objectFit: 'contain' }} />
+          <Logo height={52} />
           <div className="auth-logo-sub">الجزائر · Algeria</div>
         </div>
 

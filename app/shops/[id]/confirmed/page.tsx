@@ -1,6 +1,7 @@
 export const dynamic = 'force-dynamic'
 import Link from 'next/link'
 import { createServerSupabaseClient } from '@/lib/supabase'
+import { Logo } from '@/components/Logo'
 
 type Props = {
   params: Promise<{ id: string }>
@@ -33,9 +34,7 @@ export default async function ConfirmedPage({ params, searchParams }: Props) {
     <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', flexDirection: 'column' }}>
 
       <nav style={{ background: 'rgba(13,12,10,0.92)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--border)', height: 58, display: 'flex', alignItems: 'center', padding: '0 2rem', justifyContent: 'space-between' }}>
-        <Link href="/" style={{ textDecoration: 'none' }}>
-          <img src="/hassanly-logo.png" alt="Hassanly" style={{ height: 38, width: 'auto', objectFit: 'contain' }} />
-        </Link>
+        <Logo height={38} light />
         <Link href="/" style={{ color: 'var(--ink-3)', fontSize: '0.85rem' }}>Accueil</Link>
       </nav>
 

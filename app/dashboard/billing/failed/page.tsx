@@ -1,5 +1,6 @@
 export const dynamic = 'force-dynamic'
 import Link from 'next/link'
+import { Logo } from '@/components/Logo'
 
 export default function PaymentFailedPage() {
   return (
@@ -7,7 +8,7 @@ export default function PaymentFailedPage() {
       <div style={{ background: '#faf8f4', borderRadius: 12, padding: '2.5rem', width: '100%', maxWidth: 420, textAlign: 'center', boxShadow: '0 24px 80px rgba(0,0,0,0.5)' }}>
 
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.75rem' }}>
-          <img src="/hassanly-logo.png" alt="Hassanly" style={{ height: 60, width: 'auto', objectFit: 'contain' }} />
+          <Logo height={48} />
         </div>
 
         <div style={{ width: 72, height: 72, background: '#fde8e8', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem', fontSize: '2rem' }}>

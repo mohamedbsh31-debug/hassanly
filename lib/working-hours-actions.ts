@@ -69,7 +69,16 @@ export async function saveShopWorkingHoursAction(formData: FormData) {
   try { schedule = JSON.parse(scheduleJson) }
   catch { return { error: 'Données invalides' } }
 
-  // Upsert one row per day (0-6)
+  // Delete existing shop-level rows (barber_id IS NULL) then re-insert.
+  // This avoids the NULL != NULL issue with upsert onConflict.
+  const { error: delError } = await supabase
+    .from('working_hours')
+    .delete()
+    .eq('shop_id', shopId)
+    .is('barber_id', null)
+
+  if (delError) return { error: delError.message }
+
   const rows = Object.entries(schedule).map(([day, s]) => ({
     shop_id:     shopId,
     barber_id:   null as string | null,
@@ -83,10 +92,11 @@ export async function saveShopWorkingHoursAction(formData: FormData) {
 
   const { error } = await supabase
     .from('working_hours')
-    .upsert(rows as any, { onConflict: 'shop_id,barber_id,day_of_week', ignoreDuplicates: false })
+    .insert(rows as any)
 
   if (error) return { error: error.message }
   revalidatePath('/dashboard')
+  revalidatePath('/dashboard/hours')
   return { success: true }
 }
 
@@ -127,6 +137,15 @@ export async function saveBarberWorkingHoursAction(formData: FormData) {
   try { schedule = JSON.parse(scheduleJson) }
   catch { return { error: 'Données invalides' } }
 
+  // Delete existing rows for this barber then re-insert (same NULL-safe strategy)
+  const { error: delError } = await supabase
+    .from('working_hours')
+    .delete()
+    .eq('shop_id', shopId)
+    .eq('barber_id', barberId)
+
+  if (delError) return { error: delError.message }
+
   const rows = Object.entries(schedule).map(([day, s]) => ({
     shop_id:     shopId,
     barber_id:   barberId,
@@ -140,9 +159,10 @@ export async function saveBarberWorkingHoursAction(formData: FormData) {
 
   const { error } = await supabase
     .from('working_hours')
-    .upsert(rows as any, { onConflict: 'shop_id,barber_id,day_of_week', ignoreDuplicates: false })
+    .insert(rows as any)
 
   if (error) return { error: error.message }
   revalidatePath('/dashboard')
+  revalidatePath('/dashboard/hours')
   return { success: true }
 }

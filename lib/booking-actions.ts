@@ -28,12 +28,14 @@ export async function createBookingAction(formData: FormData) {
   const slotStart = new Date(bookedAt)
   const slotEnd   = new Date(slotStart.getTime() + duration * 60_000)
 
+  // First half of overlap: existing booking starts before our slot ends.
+  // We fetch the rows (with duration) so we can apply the second half in JS,
+  // because PostgREST can't compute booked_at + duration * interval inline.
   let conflictQuery = supabase
     .from('bookings')
-    .select('id', { count: 'exact', head: true })
+    .select('booked_at, duration')
     .eq('shop_id', shopId)
     .in('status', ['pending', 'confirmed'])
-    // existing booking starts before our slot ends
     .lt('booked_at', slotEnd.toISOString())
 
   // If a specific barber was chosen, only block that barber's slots.
@@ -42,13 +44,21 @@ export async function createBookingAction(formData: FormData) {
     conflictQuery = conflictQuery.eq('barber_id', barberId)
   }
 
-  const { count: conflictCount, error: conflictError } = await conflictQuery
+  const { data: candidates, error: conflictError } = await conflictQuery
 
   if (conflictError) {
     return { error: 'Erreur lors de la vérification de disponibilité.' }
   }
 
-  if ((conflictCount ?? 0) > 0) {
+  // Second half of overlap: existing booking must also end AFTER our slot starts.
+  // existingEnd = booked_at + duration minutes. Uses strict > so back-to-back
+  // slots (e.g. 11:00–11:30 then 11:30–12:00) are correctly allowed.
+  const hasConflict = (candidates ?? []).some(b => {
+    const existingEnd = new Date(b.booked_at).getTime() + b.duration * 60_000
+    return existingEnd > slotStart.getTime()
+  })
+
+  if (hasConflict) {
     return { error: 'Ce créneau vient d\'être réservé. Veuillez choisir un autre horaire.' }
   }
   // ─────────────────────────────────────────────────────────────────────────

@@ -123,10 +123,12 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
   // ── Realtime: push new bookings to the dashboard instantly ───────────────
   useEffect(() => {
     const supabase = createClient()
+    let retryTimeout: ReturnType<typeof setTimeout> | null = null
 
-    // Fetch full booking row (with joins) when a new one arrives
-    async function fetchBooking(id: string): Promise<Booking | null> {
-      const { data } = await supabase
+    // Fetch full booking row (with joins) when a new one arrives.
+    // Falls back to the raw payload data if the joined query fails (e.g. RLS).
+    async function fetchBooking(id: string, fallback?: any): Promise<Booking | null> {
+      const { data, error } = await supabase
         .from('bookings')
         .select(`
           *,
@@ -136,56 +138,83 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
         `)
         .eq('id', id)
         .single()
+
+      if (error || !data) {
+        console.warn('[Realtime] fetchBooking join failed, using raw payload:', error?.message)
+        // Use the raw INSERT/UPDATE payload as a minimal booking so the UI still updates
+        return fallback ? (fallback as Booking) : null
+      }
       return data as Booking | null
     }
 
-    const channel = supabase
-      .channel(`dashboard-bookings-${shop.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'bookings',
-          filter: `shop_id=eq.${shop.id}`,
-        },
-        async (payload) => {
-          const full = await fetchBooking(payload.new.id as string)
-          if (!full) return
-          setBookings(prev => {
-            if (prev.some(b => b.id === full.id)) return prev
-            return [full, ...prev]
-          })
-          // 🔔 Sound + persistent alert banner
-          playNotificationSound()
-          setNewBookingAlert({
-            clientName: full.profiles?.full_name ?? 'Client',
-            service:    full.services?.name      ?? 'Rendez-vous',
-          })
-          showToast('📅 Nouveau rendez-vous !')
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'bookings',
-          filter: `shop_id=eq.${shop.id}`,
-        },
-        async (payload) => {
-          const full = await fetchBooking(payload.new.id as string)
-          if (!full) return
-          setBookings(prev => prev.map(b => b.id === full.id ? full : b))
-        }
-      )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED')       setRealtimeStatus('connected')
-        else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') setRealtimeStatus('error')
-        else                               setRealtimeStatus('connecting')
-      })
+    function subscribe() {
+      // NOTE: We subscribe WITHOUT a server-side filter here.
+      // Filtered postgres_changes requires REPLICA IDENTITY FULL on the bookings
+      // table in Supabase (ALTER TABLE bookings REPLICA IDENTITY FULL).
+      // Without that setting the filter silently drops all events.
+      // We apply the shop_id filter in JS instead — safe and always reliable.
+      const channel = supabase
+        .channel(`dashboard-bookings-${shop.id}`)
+        .on(
+          'postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'bookings' },
+          async (payload) => {
+            // JS-side filter: ignore events for other shops
+            if ((payload.new as any).shop_id !== shop.id) return
 
-    return () => { supabase.removeChannel(channel) }
+            const full = await fetchBooking(payload.new.id as string, payload.new)
+            if (!full) return
+
+            setBookings(prev => {
+              if (prev.some(b => b.id === full.id)) return prev
+              return [full, ...prev]
+            })
+            // 🔔 Sound + persistent alert banner
+            playNotificationSound()
+            setNewBookingAlert({
+              clientName: (full as any).profiles?.full_name ?? 'Client',
+              service:    (full as any).services?.name      ?? 'Rendez-vous',
+            })
+            showToast('📅 Nouveau rendez-vous !')
+          }
+        )
+        .on(
+          'postgres_changes',
+          { event: 'UPDATE', schema: 'public', table: 'bookings' },
+          async (payload) => {
+            if ((payload.new as any).shop_id !== shop.id) return
+
+            const full = await fetchBooking(payload.new.id as string, payload.new)
+            if (!full) return
+            setBookings(prev => prev.map(b => b.id === full.id ? full : b))
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            setRealtimeStatus('connected')
+          } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            setRealtimeStatus('error')
+            // Auto-retry after 5 s
+            retryTimeout = setTimeout(() => {
+              supabase.removeChannel(channel)
+              subscribe()
+            }, 5000)
+          } else if (status === 'CLOSED') {
+            setRealtimeStatus('error')
+          } else {
+            setRealtimeStatus('connecting')
+          }
+        })
+
+      return channel
+    }
+
+    const channel = subscribe()
+
+    return () => {
+      if (retryTimeout) clearTimeout(retryTimeout)
+      supabase.removeChannel(channel)
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shop.id])
   // ─────────────────────────────────────────────────────────────────────────

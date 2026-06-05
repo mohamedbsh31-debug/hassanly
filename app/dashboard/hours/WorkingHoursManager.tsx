@@ -144,8 +144,15 @@ function DayRow({
             <button
               type="button"
               onClick={() => {
-                setShowBreak(b => !b)
-                if (showBreak) update({ break_start: null, break_end: null })
+                const next = !showBreak
+                setShowBreak(next)
+                if (next) {
+                  // Opening break — set sensible defaults so they're saved
+                  update({ break_start: schedule.break_start ?? '12:00', break_end: schedule.break_end ?? '13:00' })
+                } else {
+                  // Closing break — clear the values
+                  update({ break_start: null, break_end: null })
+                }
               }}
               style={{
                 background: showBreak ? 'var(--copper-dim)' : 'var(--bg-2)',

@@ -77,9 +77,47 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
   const pendingCount = localBookings.filter(b => b.status === 'pending').length
   const planLimits   = getPlanLimits(shop.plan)
 
+  const [newBookingAlert, setNewBookingAlert] = useState<{ clientName: string; service: string } | null>(null)
+  const [realtimeStatus, setRealtimeStatus] = useState<'connecting' | 'connected' | 'error'>('connecting')
+
   function showToast(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(null), 3000)
+  }
+
+  // ── Play a notification sound using Web Audio API (no external file needed)
+  function playNotificationSound() {
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+
+      // Two-tone "ding-dong" notification
+      const notes = [
+        { freq: 880, start: 0,    duration: 0.18 },
+        { freq: 659, start: 0.2,  duration: 0.28 },
+      ]
+
+      notes.forEach(({ freq, start, duration }) => {
+        const osc    = ctx.createOscillator()
+        const gain   = ctx.createGain()
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + start)
+
+        gain.gain.setValueAtTime(0, ctx.currentTime + start)
+        gain.gain.linearRampToValueAtTime(0.45, ctx.currentTime + start + 0.02)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + duration)
+
+        osc.start(ctx.currentTime + start)
+        osc.stop(ctx.currentTime + start + duration + 0.05)
+      })
+
+      // Auto-close context after sounds finish
+      setTimeout(() => ctx.close(), 1000)
+    } catch {
+      // Audio not available — silent fallback
+    }
   }
 
   // ── Realtime: push new bookings to the dashboard instantly ───────────────
@@ -115,9 +153,14 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
           const full = await fetchBooking(payload.new.id as string)
           if (!full) return
           setBookings(prev => {
-            // Avoid duplicates
             if (prev.some(b => b.id === full.id)) return prev
             return [full, ...prev]
+          })
+          // 🔔 Sound + persistent alert banner
+          playNotificationSound()
+          setNewBookingAlert({
+            clientName: full.profiles?.full_name ?? 'Client',
+            service:    full.services?.name      ?? 'Rendez-vous',
           })
           showToast('📅 Nouveau rendez-vous !')
         }
@@ -136,7 +179,11 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
           setBookings(prev => prev.map(b => b.id === full.id ? full : b))
         }
       )
-      .subscribe()
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED')       setRealtimeStatus('connected')
+        else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') setRealtimeStatus('error')
+        else                               setRealtimeStatus('connecting')
+      })
 
     return () => { supabase.removeChannel(channel) }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -272,10 +319,58 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
           <h1 style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}>
             {TABS.find(t => t.id === activeTab)?.label}
           </h1>
-          <div style={{ fontSize: 13, color: '#6b7280' }}>
-            Bonjour, <strong style={{ color: '#111827' }}>{firstName}</strong> 👋
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            {/* Realtime connection indicator */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: realtimeStatus === 'connected' ? '#059669' : realtimeStatus === 'error' ? '#dc2626' : '#d97706' }}>
+              <span style={{
+                display: 'inline-block', width: 7, height: 7, borderRadius: '50%',
+                background: realtimeStatus === 'connected' ? '#059669' : realtimeStatus === 'error' ? '#dc2626' : '#d97706',
+                boxShadow: realtimeStatus === 'connected' ? '0 0 0 2px rgba(5,150,105,0.25)' : 'none',
+              }} />
+              {realtimeStatus === 'connected' ? 'En direct' : realtimeStatus === 'error' ? 'Déconnecté' : 'Connexion…'}
+            </div>
+            <div style={{ fontSize: 13, color: '#6b7280' }}>
+              Bonjour, <strong style={{ color: '#111827' }}>{firstName}</strong> 👋
+            </div>
           </div>
         </header>
+
+        {/* New booking alert banner */}
+        {newBookingAlert && (
+          <div style={{
+            background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+            padding: '14px 20px',
+            display: 'flex', alignItems: 'center', gap: 12,
+            boxShadow: '0 4px 12px rgba(217,119,6,0.35)',
+          }}>
+            <span style={{ fontSize: 22 }}>🔔</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>Nouveau rendez-vous !</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 2 }}>
+                {newBookingAlert.clientName} — {newBookingAlert.service}
+              </div>
+            </div>
+            <button
+              onClick={() => { setNewBookingAlert(null); setActiveTab('appointments') }}
+              style={{ background: 'rgba(255,255,255,0.2)', border: '1px solid rgba(255,255,255,0.3)', color: '#fff', borderRadius: 7, padding: '6px 14px', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0 }}
+            >
+              Voir →
+            </button>
+            <button
+              onClick={() => setNewBookingAlert(null)}
+              style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: 18, cursor: 'pointer', lineHeight: 1, padding: '0 4px', flexShrink: 0 }}
+            >
+              ×
+            </button>
+          </div>
+        )}
+
+        <style>{`
+          @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
+        `}</style>
 
         <main style={{ flex: 1, padding: 24, overflowX: 'auto' }}>
 

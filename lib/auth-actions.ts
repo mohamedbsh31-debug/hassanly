@@ -120,3 +120,26 @@ export async function getCurrentUser() {
 
   return { user, profile }
 }
+
+// ─── Google OAuth ──────────────────────────────────────────────────────────────
+export async function googleLoginAction(redirectTo?: string) {
+  const supabase = await createServerSupabaseClient()
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+  const callbackUrl = new URL('/auth/callback', siteUrl)
+  if (redirectTo) callbackUrl.searchParams.set('next', redirectTo)
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: callbackUrl.toString(),
+      queryParams: {
+        access_type: 'offline',
+        prompt: 'consent',
+      },
+    },
+  })
+
+  if (error || !data.url) return { error: error?.message ?? 'Erreur Google OAuth' }
+  redirect(data.url)
+}

@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createBookingAction } from '@/lib/booking-actions'
 import { logoutAction } from '@/lib/auth-actions'
 import type { Shop, Profile } from '@/types/database'
 import { Logo } from '@/components/Logo'
+import { createClient } from '@/lib/supabase-browser'
 
 type Service = { id: string; shop_id: string; name: string; description: string | null; duration: number; price: number; icon: string; is_active: boolean }
 type Barber  = { id: string; shop_id: string; name: string; emoji: string; rating: number | null; review_count: number; bio: string | null; photo_url?: string | null }
@@ -49,7 +50,7 @@ const MONTHS_FR    = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet'
 const MONTHS_SHORT = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']
 const DAYS_FR      = ['Di','Lu','Ma','Me','Je','Ve','Sa']
 
-export default function ShopDetailClient({ shop, services, barbers, bookings, user }: Props) {
+export default function ShopDetailClient({ shop, services, barbers, bookings: initialBookings, user }: Props) {
   const router = useRouter()
   const displayServices = services.length > 0 ? services : DEMO_SERVICES
   const displayBarbers  = barbers.length > 0 ? barbers : DEMO_BARBERS
@@ -65,6 +66,52 @@ export default function ShopDetailClient({ shop, services, barbers, bookings, us
   const [notes, setNotes]             = useState('')
   const [submitting, setSubmitting]   = useState(false)
   const [error, setError]             = useState<string | null>(null)
+
+  // Live bookings state — starts with server-fetched data, updated via Realtime
+  // so taken slots appear/disappear instantly for all users on this page
+  const [bookings, setBookings]       = useState<Booking[]>(initialBookings)
+
+  useEffect(() => {
+    const supabase = createClient()
+    const channel = supabase
+      .channel(`shop-slots-${shop.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'bookings' },
+        (payload) => {
+          const b = payload.new as any
+          if (b.shop_id !== shop.id) return
+          if (!['pending', 'confirmed'].includes(b.status)) return
+          setBookings(prev => {
+            if (prev.some(x => x.booked_at === b.booked_at && x.barber_id === b.barber_id)) return prev
+            return [...prev, { booked_at: b.booked_at, barber_id: b.barber_id }]
+          })
+          // If the user had this exact slot selected, kick them out of it
+          setTime(prev => {
+            if (prev && bookingToSlot(b.booked_at) === prev) {
+              setError("Ce créneau vient d'être réservé. Choisissez un autre horaire.")
+              return null
+            }
+            return prev
+          })
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'bookings' },
+        (payload) => {
+          const b = payload.new as any
+          if (b.shop_id !== shop.id) return
+          // If booking was cancelled/completed, free the slot
+          if (!['pending', 'confirmed'].includes(b.status)) {
+            setBookings(prev => prev.filter(x => !(x.booked_at === b.booked_at && x.barber_id === b.barber_id)))
+          }
+        }
+      )
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shop.id])
 
   const daysInMonth   = new Date(calYear, calMonth + 1, 0).getDate()
   const firstDayOfWeek = new Date(calYear, calMonth, 1).getDay()
@@ -106,11 +153,9 @@ export default function ShopDetailClient({ shop, services, barbers, bookings, us
     if (result?.error) {
       setError(result.error)
       setSubmitting(false)
-      // If the slot was just snapped up by someone else, clear the selection
-      // and refresh the server data so the taken slots update immediately.
+      // Slot conflict — clear selection (realtime already updates the grid)
       if (result.error.includes('cr\u00e9neau')) {
         setTime(null)
-        router.refresh()
       }
     }
   }

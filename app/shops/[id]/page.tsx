@@ -9,7 +9,7 @@ type Props = { params: Promise<{ id: string }> }
 async function getShopData(id: string) {
   const supabase = await createServerSupabaseClient()
 
-  const [shopRes, servicesRes, barbersRes, bookingsRes] = await Promise.all([
+  const [shopRes, servicesRes, barbersRes, bookingsRes, hoursRes] = await Promise.all([
     supabase.from('shops').select('*').eq('id', id).single(),
     supabase.from('services').select('*').eq('shop_id', id).eq('is_active', true).order('price'),
     supabase.from('barbers').select('*').eq('shop_id', id).eq('is_active', true),
@@ -20,19 +20,27 @@ async function getShopData(id: string) {
       .eq('shop_id', id)
       .in('status', ['pending', 'confirmed'])
       .gte('booked_at', new Date().toISOString()),
+    // Fetch shop working hours (barber_id IS NULL = shop-level hours)
+    supabase
+      .from('working_hours')
+      .select('day_of_week, is_open, open_time, close_time, break_start, break_end')
+      .eq('shop_id', id)
+      .is('barber_id', null)
+      .order('day_of_week'),
   ])
 
   return {
-    shop: shopRes.data,
+    shop:     shopRes.data,
     services: servicesRes.data ?? [],
-    barbers: barbersRes.data ?? [],
+    barbers:  barbersRes.data ?? [],
     bookings: bookingsRes.data ?? [],
+    shopHours: hoursRes.data ?? [],
   }
 }
 
 export default async function ShopDetailPage({ params }: Props) {
   const { id } = await params
-  const [{ shop, services, barbers, bookings }, currentUser] = await Promise.all([
+  const [{ shop, services, barbers, bookings, shopHours }, currentUser] = await Promise.all([
     getShopData(id),
     getCurrentUser(),
   ])
@@ -45,6 +53,7 @@ export default async function ShopDetailPage({ params }: Props) {
       services={services}
       barbers={barbers}
       bookings={bookings}
+      shopHours={shopHours}
       user={currentUser}
     />
   )

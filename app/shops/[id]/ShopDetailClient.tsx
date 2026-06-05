@@ -9,10 +9,11 @@ import type { Shop, Profile } from '@/types/database'
 import { Logo } from '@/components/Logo'
 import { createClient } from '@/lib/supabase-browser'
 
-type Service = { id: string; shop_id: string; name: string; description: string | null; duration: number; price: number; icon: string; is_active: boolean }
-type Barber  = { id: string; shop_id: string; name: string; emoji: string; rating: number | null; review_count: number; bio: string | null; photo_url?: string | null }
-type Booking = { booked_at: string; barber_id: string | null }
-type Props   = { shop: Shop; services: Service[]; barbers: Barber[]; bookings: Booking[]; user: { user: any; profile: Profile | null } | null }
+type Service     = { id: string; shop_id: string; name: string; description: string | null; duration: number; price: number; icon: string; is_active: boolean }
+type Barber      = { id: string; shop_id: string; name: string; emoji: string; rating: number | null; review_count: number; bio: string | null; photo_url?: string | null }
+type Booking     = { booked_at: string; barber_id: string | null }
+type ShopHourRow = { day_of_week: number; is_open: boolean; open_time: string | null; close_time: string | null; break_start: string | null; break_end: string | null }
+type Props       = { shop: Shop; services: Service[]; barbers: Barber[]; bookings: Booking[]; shopHours: ShopHourRow[]; user: { user: any; profile: Profile | null } | null }
 
 const DEMO_SERVICES: Service[] = [
   { id: 'd-s1', shop_id: '', name: 'Skin Fade', description: 'Dégradé américain signature', duration: 40, price: 700, icon: '✂️', is_active: true },
@@ -27,11 +28,11 @@ const DEMO_BARBERS: Barber[] = [
 ]
 
 // Generate time slots from open to close, skipping a break window, every 30 min
-function generateSlots(openH = 8, openM = 30, closeH = 18, closeM = 0, breakStart = 12, breakEnd = 14): string[] {
+function generateSlots(openH = 8, openM = 30, closeH = 18, closeM = 0, breakStart?: number, breakEnd?: number): string[] {
   const slots: string[] = []
   let h = openH, m = openM
   while (h < closeH || (h === closeH && m < closeM)) {
-    const inBreak = h >= breakStart && h < breakEnd
+    const inBreak = breakStart != null && breakEnd != null && h >= breakStart && h < breakEnd
     if (!inBreak) slots.push(`${h}h${m === 0 ? '00' : m}`)
     m += 30
     if (m >= 60) { h++; m -= 60 }
@@ -50,7 +51,7 @@ const MONTHS_FR    = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet'
 const MONTHS_SHORT = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc']
 const DAYS_FR      = ['Di','Lu','Ma','Me','Je','Ve','Sa']
 
-export default function ShopDetailClient({ shop, services, barbers, bookings: initialBookings, user }: Props) {
+export default function ShopDetailClient({ shop, services, barbers, bookings: initialBookings, shopHours, user }: Props) {
   const router = useRouter()
   const displayServices = services.length > 0 ? services : DEMO_SERVICES
   const displayBarbers  = barbers.length > 0 ? barbers : DEMO_BARBERS
@@ -333,7 +334,22 @@ export default function ShopDetailClient({ shop, services, barbers, bookings: in
             {!selectedDay
               ? <p style={{ fontSize: '0.78rem', color: 'var(--ink-3)', fontStyle: 'italic' }}>Sélectionnez d'abord une date</p>
               : (() => {
-                  const timeSlots = generateSlots()
+                  // Get the working hours for the selected day of week
+                  const dayOfWeek = new Date(calYear, calMonth, selectedDay).getDay()
+                  const dayHours  = shopHours.find(h => h.day_of_week === dayOfWeek)
+
+                  // If the shop is closed that day, show a message instead of slots
+                  if (dayHours && !dayHours.is_open) {
+                    return <p style={{ fontSize: '0.78rem', color: 'var(--ink-3)', fontStyle: 'italic' }}>Salon fermé ce jour</p>
+                  }
+
+                  // Parse real open/close times, fall back to defaults if no hours set
+                  const [openH,  openM]  = (dayHours?.open_time  ?? '08:30').split(':').map(Number)
+                  const [closeH, closeM] = (dayHours?.close_time ?? '18:00').split(':').map(Number)
+                  const breakStart = dayHours?.break_start ? parseInt(dayHours.break_start.split(':')[0]) : undefined
+                  const breakEnd   = dayHours?.break_end   ? parseInt(dayHours.break_end.split(':')[0])   : undefined
+
+                  const timeSlots = generateSlots(openH, openM, closeH, closeM, breakStart, breakEnd)
                   // Filter bookings to the selected day
                   const selectedDate = new Date(calYear, calMonth, selectedDay)
                   const takenSlots = new Set(

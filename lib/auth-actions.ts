@@ -125,7 +125,12 @@ export async function getCurrentUser() {
 export async function googleLoginAction(redirectTo?: string) {
   const supabase = await createServerSupabaseClient()
 
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+  // Use NEXT_PUBLIC_SITE_URL if set, otherwise fall back to Vercel's automatic
+  // VERCEL_URL (no https:// prefix so we add it), then localhost for dev.
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+
   const callbackUrl = new URL('/auth/callback', siteUrl)
   if (redirectTo) callbackUrl.searchParams.set('next', redirectTo)
 

@@ -103,7 +103,16 @@ export default function ShopDetailClient({ shop, services, barbers, bookings, us
     fd.set('duration', String(selectedService!.duration)); fd.set('price', String(selectedService!.price))
     fd.set('notes', notes)
     const result = await createBookingAction(fd)
-    if (result?.error) { setError(result.error); setSubmitting(false) }
+    if (result?.error) {
+      setError(result.error)
+      setSubmitting(false)
+      // If the slot was just snapped up by someone else, clear the selection
+      // and refresh the server data so the taken slots update immediately.
+      if (result.error.includes('cr\u00e9neau')) {
+        setTime(null)
+        router.refresh()
+      }
+    }
   }
 
   return (

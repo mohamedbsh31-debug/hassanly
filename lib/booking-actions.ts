@@ -21,6 +21,38 @@ export async function createBookingAction(formData: FormData) {
   const price     = parseInt(formData.get('price') as string)
   const notes     = formData.get('notes') as string | null
 
+  // ── Double-booking prevention ─────────────────────────────────────────────
+  // Build a query to find any active booking that overlaps this slot.
+  // Overlap condition: existingStart < newEnd AND existingEnd > newStart
+  // where newEnd = bookedAt + duration minutes.
+  const slotStart = new Date(bookedAt)
+  const slotEnd   = new Date(slotStart.getTime() + duration * 60_000)
+
+  let conflictQuery = supabase
+    .from('bookings')
+    .select('id', { count: 'exact', head: true })
+    .eq('shop_id', shopId)
+    .in('status', ['pending', 'confirmed'])
+    // existing booking starts before our slot ends
+    .lt('booked_at', slotEnd.toISOString())
+
+  // If a specific barber was chosen, only block that barber's slots.
+  // If "premier disponible" (no barber), block the whole shop slot.
+  if (barberId) {
+    conflictQuery = conflictQuery.eq('barber_id', barberId)
+  }
+
+  const { count: conflictCount, error: conflictError } = await conflictQuery
+
+  if (conflictError) {
+    return { error: 'Erreur lors de la vérification de disponibilité.' }
+  }
+
+  if ((conflictCount ?? 0) > 0) {
+    return { error: 'Ce créneau vient d\'être réservé. Veuillez choisir un autre horaire.' }
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   const { data, error } = await supabase
     .from('bookings')
     .insert({
@@ -38,6 +70,10 @@ export async function createBookingAction(formData: FormData) {
     .single()
 
   if (error) {
+    // Catch unique constraint violations from the DB index (belt-and-suspenders)
+    if (error.code === '23505') {
+      return { error: 'Ce créneau vient d\'être réservé. Veuillez choisir un autre horaire.' }
+    }
     return { error: error.message }
   }
 

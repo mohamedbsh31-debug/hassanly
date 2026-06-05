@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useEffect, useRef } from 'react'
+import { useState, useTransition, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { logoutAction } from '@/lib/auth-actions'
@@ -12,6 +12,7 @@ import WorkingHoursManager from './hours/WorkingHoursManager'
 import { getPlanLimits } from '@/lib/plan-limits'
 
 import type { WeekSchedule } from '@/lib/working-hours-actions'
+import { createClient } from '@/lib/supabase-browser'
 
 type Profile  = { full_name: string | null; role: string; wilaya: string | null }
 type Shop     = { id: string; name: string; wilaya: string; plan: string; is_active: boolean; is_verified: boolean; rating: number | null; plan_expires_at: string | null; image_url: string | null }
@@ -80,6 +81,67 @@ export default function DashboardClient({ profile, shop, bookings, services, bar
     setToast(msg)
     setTimeout(() => setToast(null), 3000)
   }
+
+  // ── Realtime: push new bookings to the dashboard instantly ───────────────
+  useEffect(() => {
+    const supabase = createClient()
+
+    // Fetch full booking row (with joins) when a new one arrives
+    async function fetchBooking(id: string): Promise<Booking | null> {
+      const { data } = await supabase
+        .from('bookings')
+        .select(`
+          *,
+          profiles!bookings_client_id_fkey ( full_name, phone ),
+          services ( name, duration ),
+          barbers ( name )
+        `)
+        .eq('id', id)
+        .single()
+      return data as Booking | null
+    }
+
+    const channel = supabase
+      .channel(`dashboard-bookings-${shop.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'bookings',
+          filter: `shop_id=eq.${shop.id}`,
+        },
+        async (payload) => {
+          const full = await fetchBooking(payload.new.id as string)
+          if (!full) return
+          setBookings(prev => {
+            // Avoid duplicates
+            if (prev.some(b => b.id === full.id)) return prev
+            return [full, ...prev]
+          })
+          showToast('📅 Nouveau rendez-vous !')
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'bookings',
+          filter: `shop_id=eq.${shop.id}`,
+        },
+        async (payload) => {
+          const full = await fetchBooking(payload.new.id as string)
+          if (!full) return
+          setBookings(prev => prev.map(b => b.id === full.id ? full : b))
+        }
+      )
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shop.id])
+  // ─────────────────────────────────────────────────────────────────────────
 
   async function confirmBooking(id: string) {
     const res = await fetch('/api/bookings/confirm', {
